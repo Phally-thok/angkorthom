@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block header_title %}
+<i class="fa-solid fa-users-gear" style="color: var(--accent-gold);"></i> ៨. ការកំណត់សិទ្ធិប្រើប្រាស់ (User Authorization & Accounts)
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-user-shield"></i> គ្រប់គ្រងគណនី និងការកំណត់សិទ្ធិប្រើប្រាស់ប្រព័ន្ធ
+        </div>
+        <button class="btn btn-primary" onclick="openAddUserModal()">
+            <i class="fa-solid fa-user-plus"></i> បង្កើតអ្នកប្រើប្រាស់ថ្មី
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>ឈ្មោះគណនី (Username)</th>
+                    <th>ឈ្មោះពេញ</th>
+                    <th>តួនាទី (Role)</th>
+                    <th>តំណែងមន្ត្រី</th>
+                    <th>លេខទូរស័ព្ទ</th>
+                    <th>សកម្មភាព</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users_list %}
+                <tr>
+                    <td><strong>{{ u.username }}</strong></td>
+                    <td>{{ u.full_name }}</td>
+                    <td>
+                        {% if u.role == 'admin' %}
+                        <span class="badge badge-danger"><i class="fa-solid fa-crown"></i> Admin (អ្នកគ្រប់គ្រង)</span>
+                        {% elif u.role == 'user' %}
+                        <span class="badge badge-primary"><i class="fa-solid fa-user"></i> User (អ្នកប្រើប្រាស់)</span>
+                        {% else %}
+                        <span class="badge badge-gold"><i class="fa-solid fa-shield"></i> Other (ផ្សេងៗ)</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge badge-gold">{{ u.position or '-' }}</span></td>
+                    <td>{{ u.phone or '-' }}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editUserModal('{{ u.id }}', '{{ u.username }}', '{{ u.full_name }}', '{{ u.role }}', '{{ u.position or '' }}', '{{ u.phone or '' }}')">
+                            <i class="fa-solid fa-pen-to-square"></i> កែប្រែ
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="resetUserPassword({{ u.id }}, '{{ u.username }}')">
+                            <i class="fa-solid fa-key"></i> ដូរពាក្យសម្ងាត់
+                        </button>
+                        <a href="/users?action=delete&target=user&id={{ u.id }}" class="btn btn-danger btn-sm" onclick="return confirm('តើអ្នកពិតជាចង់លុបគណនីនេះមែនទេ?')">
+                            <i class="fa-solid fa-trash"></i> លុប
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Add/Edit User -->
+<div class="modal-backdrop" id="addUserModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="userModalTitle"><i class="fa-solid fa-user-plus"></i> បង្កើតគណនីអ្នកប្រើប្រាស់ថ្មី</h3>
+            <button class="modal-close" onclick="closeModal('addUserModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_user') }}" method="POST">
+            <input type="hidden" name="user_id" id="user_id" value="">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ឈ្មោះគណនី (Username)</label>
+                        <input type="text" name="username" id="user_username" class="form-control" placeholder="ឧ. officer_at" required>
+                    </div>
+                    <div class="form-group">
+                        <label id="user_password_label">ពាក្យសម្ងាត់ (Password)</label>
+                        <input type="password" name="password" id="user_password" class="form-control" placeholder="ពាក្យសម្ងាត់">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ឈ្មោះពេញ (Full Name)</label>
+                    <input type="text" name="full_name" id="user_full_name" class="form-control" placeholder="ឧ. លោក សុខ ចាន់" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>សិទ្ធិប្រើប្រាស់ (Role)</label>
+                        <select name="role" id="user_role" class="form-control" required>
+                            <option value="user">អ្នកប្រើប្រាស់ទូទៅ (User)</option>
+                            <option value="admin">អ្នកគ្រប់គ្រងប្រព័ន្ធ (Admin)</option>
+                            <option value="other">ផ្សេងៗ (Other)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>តំណែងមន្ត្រី</label>
+                        <div style="display: flex; gap: 6px;">
+                            <select name="position" id="user_position" class="form-control" required style="flex: 1;">
+                                <option value="ប្រធានការិយាល័យ">ប្រធានការិយាល័យ</option>
+                                <option value="អនុប្រធាន">អនុប្រធាន</option>
+                                <option value="បុគ្គលិក">បុគ្គលិក</option>
+                            </select>
+                            <button type="button" class="btn btn-secondary" onclick="addNewPositionPrompt()" style="padding: 0 14px; white-space: nowrap;" title="បន្ថែមតំណែងថ្មី">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>លេខទូរស័ព្ទ</label>
+                    <input type="text" name="phone" id="user_phone" class="form-control" placeholder="012 345 678">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addUserModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function addNewPositionPrompt() {
+    var newPos = prompt("សូមបញ្ចូលឈ្មោះតំណែងមន្ត្រីថ្មី (Enter new position name):");
+    if (newPos && newPos.trim() !== "") {
+        newPos = newPos.trim();
+        var select = document.getElementById('user_position');
+        var exists = false;
+        for (var i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === newPos) {
+                exists = true;
+                select.selectedIndex = i;
+                break;
+            }
+        }
+        if (!exists) {
+            var opt = document.createElement('option');
+            opt.value = newPos;
+            opt.innerText = newPos;
+            select.appendChild(opt);
+            select.value = newPos;
+        }
+    }
+}
+
+function openAddUserModal() {
+    document.getElementById('user_id').value = '';
+    document.getElementById('user_username').value = '';
+    document.getElementById('user_password').value = '';
+    document.getElementById('user_password').required = true;
+    document.getElementById('user_password_label').innerText = 'ពាក្យសម្ងាត់ (Password)';
+    document.getElementById('user_full_name').value = '';
+    document.getElementById('user_role').value = 'user';
+    document.getElementById('user_position').value = 'បុគ្គលិក';
+    document.getElementById('user_phone').value = '';
+    document.getElementById('userModalTitle').innerHTML = '<i class="fa-solid fa-user-plus"></i> បង្កើតគណនីអ្នកប្រើប្រាស់ថ្មី';
+    openModal('addUserModal');
+}
+
+function editUserModal(id, username, full_name, role, position, phone) {
+    document.getElementById('user_id').value = id;
+    document.getElementById('user_username').value = username;
+    document.getElementById('user_password').value = '';
+    document.getElementById('user_password').required = false;
+    document.getElementById('user_password_label').innerText = 'ពាក្យសម្ងាត់ថ្មី (ទុកទំនេរប្រសិនបើមិនប្តូរ)';
+    document.getElementById('user_full_name').value = full_name;
+    document.getElementById('user_role').value = role;
+
+    var posSelect = document.getElementById('user_position');
+    if (position && position.trim() !== '') {
+        var found = false;
+        for (var i = 0; i < posSelect.options.length; i++) {
+            if (posSelect.options[i].value === position) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            var opt = document.createElement('option');
+            opt.value = position;
+            opt.innerText = position;
+            posSelect.appendChild(opt);
+        }
+        posSelect.value = position;
+    } else {
+        posSelect.value = 'បុគ្គលិក';
+    }
+
+    document.getElementById('user_phone').value = phone;
+    document.getElementById('userModalTitle').innerHTML = '<i class="fa-solid fa-user-pen"></i> កែប្រែគណនីអ្នកប្រើប្រាស់';
+    openModal('addUserModal');
+}
+</script>
+{% endblock %}

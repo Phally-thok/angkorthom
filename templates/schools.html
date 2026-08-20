@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block header_title %}
+<i class="fa-solid fa-school" style="color: var(--accent-gold);"></i> ១. គ្រប់គ្រងព័ត៌មានសាលារៀន
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-list-check"></i> បញ្ជីសាលារៀនក្នុងស្រុកអង្គរធំ
+        </div>
+        {% if session.get('role') in ['admin', 'chief'] %}
+        <button class="btn btn-primary" onclick="openModal('addSchoolModal')">
+            <i class="fa-solid fa-plus"></i> បន្ថែមសាលារៀនថ្មី
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>កូដសាលា</th>
+                    <th>ឈ្មោះសាលារៀន (ខ្មែរ)</th>
+                    <th>កម្រិតសិក្សា</th>
+                    <th>ទីតាំង (ឃុំ/ភូមិ)</th>
+                    <th>នាយក/នាយិកាសាលា</th>
+                    <th>លេខទូរស័ព្ទ</th>
+                    <th>បន្ទប់ / អគារ</th>
+                    <th>សកម្មភាព</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for school in schools %}
+                <tr>
+                    <td><strong>{{ school.code }}</strong></td>
+                    <td>
+                        <div style="font-weight: 600; color: #fff;">{{ school.name_kh }}</div>
+                    </td>
+                    <td>
+                        {% if school.level == 'high' %}
+                        <span class="badge badge-gold">វិទ្យាល័យ</span>
+                        {% elif school.level == 'secondary' %}
+                        <span class="badge badge-primary">អនុវិទ្យាល័យ</span>
+                        {% elif school.level == 'primary' %}
+                        <span class="badge badge-success">បឋមសិក្សា</span>
+                        {% elif school.level == 'community_preschool' %}
+                        <span class="badge badge-secondary" style="background: rgba(255, 112, 166, 0.2); color: #ff70a6;">មត្តេយ្យសហគមន៍</span>
+                        {% else %}
+                        <span class="badge badge-secondary" style="background: rgba(255, 183, 178, 0.2); color: #ffb7b2;">មត្តេយ្យរដ្ឋ</span>
+                        {% endif %}
+                    </td>
+                    <td>ឃុំ{{ school.commune }}, ភូមិ{{ school.village }}</td>
+                    <td>{{ school.principal_name }}</td>
+                    <td>{{ school.principal_phone }}</td>
+                    <td>{{ school.classrooms }} ថ្នាក់ / {{ school.buildings }} អគារ</td>
+                    <td>
+                        {% if session.get('role') in ['admin', 'chief'] %}
+                        <button class="btn btn-secondary btn-sm" onclick="editSchool({{ school|tojson|forceescape }})">
+                            <i class="fa-solid fa-pen-to-square"></i> កែប្រែ
+                        </button>
+                        <a href="/schools?action=delete&target=school&id={{ school.id }}" class="btn btn-danger btn-sm" onclick="return confirm('តើអ្នកពិតជាចង់លុបទិន្នន័យសាលារៀននេះមែនទេ?')">
+                            <i class="fa-solid fa-trash"></i> លុប
+                        </a>
+                        {% else %}
+                        <span class="badge badge-secondary">មើល</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Add / Edit School -->
+<div class="modal-backdrop" id="addSchoolModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="schoolModalTitle"><i class="fa-solid fa-school"></i> បន្ថែមសាលារៀនថ្មី</h3>
+            <button class="modal-close" onclick="closeModal('addSchoolModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_school') }}" method="POST" id="schoolForm">
+            <input type="hidden" name="school_id" id="school_id">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>កូដសាលារៀន</label>
+                        <input type="text" name="code" id="school_code" class="form-control" placeholder="ឧ. SCH-AT008" required>
+                    </div>
+                    <div class="form-group">
+                        <label>កម្រិតសិក្សា</label>
+                        <select name="level" id="school_level" class="form-control" required>
+                            <option value="community_preschool">មត្តេយ្យសិក្សាសហគមន៍</option>
+                            <option value="state_preschool">មត្តេយ្យសិក្សារដ្ឋ</option>
+                            <option value="primary">បឋមសិក្សា</option>
+                            <option value="secondary">អនុវិទ្យាល័យ</option>
+                            <option value="high">វិទ្យាល័យ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ឈ្មោះសាលារៀនជាភាសាខ្មែរ</label>
+                    <input type="text" name="name_kh" id="school_name_kh" class="form-control" placeholder="ឧ. សាលាបឋមសិក្សា..." required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ឃុំ</label>
+                        <input type="text" name="commune" id="school_commune" class="form-control" placeholder="ឧ. លាងដៃ" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ភូមិ</label>
+                        <input type="text" name="village" id="school_village" class="form-control" placeholder="ឧ. លាងដៃ" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ឈ្មោះនាយក/នាយិកាសាលា</label>
+                        <input type="text" name="principal_name" id="school_principal_name" class="form-control" placeholder="ឈ្មោះពេញ..." required>
+                    </div>
+                    <div class="form-group">
+                        <label>លេខទូរស័ព្ទទំនាក់ទំនង</label>
+                        <input type="text" name="principal_phone" id="school_principal_phone" class="form-control" placeholder="012 345 678">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ចំនួនថ្នាក់រៀន</label>
+                        <input type="number" name="classrooms" id="school_classrooms" class="form-control" value="10" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>ចំនួនអគារសិក្សា</label>
+                        <input type="number" name="buildings" id="school_buildings" class="form-control" value="2" min="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addSchoolModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function editSchool(school) {
+        document.getElementById('schoolModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> កែប្រែព័ត៌មានសាលារៀន';
+        document.getElementById('school_id').value = school.id;
+        document.getElementById('school_code').value = school.code;
+        document.getElementById('school_level').value = school.level;
+        document.getElementById('school_name_kh').value = school.name_kh;
+        document.getElementById('school_commune').value = school.commune;
+        document.getElementById('school_village').value = school.village;
+        document.getElementById('school_principal_name').value = school.principal_name;
+        document.getElementById('school_principal_phone').value = school.principal_phone || '';
+        document.getElementById('school_classrooms').value = school.classrooms;
+        document.getElementById('school_buildings').value = school.buildings;
+        openModal('addSchoolModal');
+    }
+</script>
+{% endblock %}
+

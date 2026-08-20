@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block header_title %}
+<i class="fa-solid fa-trophy" style="color: var(--accent-gold);"></i> ៤. គ្រប់គ្រងសកម្មភាពយុវជន និងកីឡា (Youth & Sports Management)
+{% endblock %}
+
+{% block content %}
+<!-- Sports Section -->
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-person-running"></i> ការប្រកួតកីឡាសិស្ស និងបេក្ខជន/ក្រុមតំណាងស្រុកអង្គរធំ
+        </div>
+        {% if session.get('role') in ['admin', 'chief'] %}
+        <button class="btn btn-primary" onclick="openModal('addAthleteModal')">
+            <i class="fa-solid fa-plus"></i> បន្ថែមឈ្មោះកីឡាករជ័យលាភី
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>ឈ្មោះកីឡាករ/កីឡាការិនី</th>
+                    <th>ភេទ</th>
+                    <th>តំណាងសាលារៀន</th>
+                    <th>ប្រភេទកីឡា</th>
+                    <th>ជ័យលាភី / មេដាយ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in athletes_list %}
+                <tr>
+                    <td><strong>{{ a.athlete_name }}</strong></td>
+                    <td>{{ 'ប្រុស' if a.sex == 'M' else 'ស្រី' }}</td>
+                    <td>{{ a.school_name }}</td>
+                    <td><span class="badge badge-primary">{{ a.sport_type }}</span></td>
+                    <td><span class="badge badge-gold"><i class="fa-solid fa-medal"></i> {{ a.achievement }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Youth Clubs Section -->
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-campground"></i> ក្លឹបយុវជន, កាយរឹទ្ធិជាតិ (Scouts) និងសកម្មភាពស្ម័គ្រចិត្ត
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addYouthClubModal')">
+            <i class="fa-solid fa-plus"></i> បន្ថែមក្លឹប/សកម្មភាពយុវជន
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>ឈ្មោះក្លឹប / កម្មវិធី</th>
+                    <th>ប្រភេទ</th>
+                    <th>ទីតាំងអនុវត្ត</th>
+                    <th>ប្រធានដឹកនាំ</th>
+                    <th>សមាជិកសរុប (ស្រី)</th>
+                    <th>កាលបរិច្ឆេទ</th>
+                    <th>ព័ត៌មានលម្អិត</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for y in youth_list %}
+                <tr>
+                    <td><strong>{{ y.title }}</strong></td>
+                    <td>
+                        {% if y.club_type == 'scout' %}
+                        <span class="badge badge-gold"><i class="fa-solid fa-campground"></i> កាយរឹទ្ធិជាតិ</span>
+                        {% elif y.club_type == 'volunteer' %}
+                        <span class="badge badge-success"><i class="fa-solid fa-hand-holding-heart"></i> ស្ម័គ្រចិត្ត</span>
+                        {% else %}
+                        <span class="badge badge-primary">ក្លឹបយុវជន</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ y.location }}</td>
+                    <td>{{ y.leader_name }}</td>
+                    <td>{{ y.total_members }} នាក់ ({{ y.female_members }})</td>
+                    <td>{{ y.activity_date }}</td>
+                    <td>{{ y.description }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Add Athlete -->
+<div class="modal-backdrop" id="addAthleteModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-medal"></i> បន្ថែមឈ្មោះកីឡាករ / ជ័យលាភី</h3>
+            <button class="modal-close" onclick="closeModal('addAthleteModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_athlete') }}" method="POST">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ឈ្មោះកីឡាករ/កីឡាការិនី</label>
+                        <input type="text" name="athlete_name" class="form-control" placeholder="ឧ. កញ្ញា សុខ លីណា" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ភេទ</label>
+                        <select name="sex" class="form-control" required>
+                            <option value="F">ស្រី (Female)</option>
+                            <option value="M">ប្រុស (Male)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>តំណាងសាលារៀន</label>
+                        <select name="school_id" class="form-control" required>
+                            {% for sch in schools %}
+                            <option value="{{ sch.id }}">{{ sch.name_kh }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ប្រភេទកីឡា</label>
+                        <input type="text" name="sport_type" class="form-control" placeholder="ឧ. រត់ប្រណាំង, បាល់ទាត់, បាល់ទះ" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ជ័យលាភី / មេដាយ</label>
+                    <input type="text" name="achievement" class="form-control" placeholder="ឧ. មេដាយមាស, ជើងឯកលេខ១" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addAthleteModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Add Youth Club -->
+<div class="modal-backdrop" id="addYouthClubModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-campground"></i> បន្ថែមក្លឹប ឬ សកម្មភាពយុវជន</h3>
+            <button class="modal-close" onclick="closeModal('addYouthClubModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_youth_club') }}" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>ឈ្មោះក្លឹប / កម្មវិធី</label>
+                    <input type="text" name="title" class="form-control" placeholder="ឧ. ក្លឹបយុវជនកាយរឹទ្ធិ..." required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ប្រភេទ</label>
+                        <select name="club_type" class="form-control" required>
+                            <option value="scout">កាយរឹទ្ធិជាតិ (Scouts)</option>
+                            <option value="volunteer">កម្មវិធីស្ម័គ្រចិត្ត (Volunteer)</option>
+                            <option value="youth_club">ក្លឹបយុវជន (Youth Club)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ទីតាំងអនុវត្ត</label>
+                        <input type="text" name="location" class="form-control" placeholder="ឧ. វិទ្យាល័យ ហ៊ុន សែន អង្គរធំ" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ឈ្មោះប្រធានដឹកនាំ</label>
+                        <input type="text" name="leader_name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>កាលបរិច្ឆេទ</label>
+                        <input type="date" name="activity_date" class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>សមាជិកសរុប</label>
+                        <input type="number" name="total_members" class="form-control" value="30">
+                    </div>
+                    <div class="form-group">
+                        <label>សមាជិកស្រី</label>
+                        <input type="number" name="female_members" class="form-control" value="15">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>សកម្មភាព / ព័ត៌មានលម្អិត</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="ពិពណ៌នាពីសកម្មភាព..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addYouthClubModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

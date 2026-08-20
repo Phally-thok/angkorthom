@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+
+{% block header_title %}
+<i class="fa-solid fa-chart-pie" style="color: var(--accent-gold);"></i> ផ្ទាំងព័ត៌មាន និងស្ថិតិសង្ខេប
+{% endblock %}
+
+{% block content %}
+<!-- Metric Cards Grid -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-icon blue">
+            <i class="fa-solid fa-school"></i>
+        </div>
+        <div class="metric-info">
+            <div class="label">សាលារៀនសរុប</div>
+            <div class="value">{{ stats.total_schools }}</div>
+            <div class="subtext">វិទ្យាល័យ {{ stats.school_counts.high }} | អនុ {{ stats.school_counts.secondary }} | បឋម {{ stats.school_counts.primary }} | មត្តេយ្យរដ្ឋ {{ stats.school_counts.state_preschool }} | សហគមន៍ {{ stats.school_counts.community_preschool }}</div>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon gold">
+            <i class="fa-solid fa-chalkboard-user"></i>
+        </div>
+        <div class="metric-info">
+            <div class="label">បុគ្គលិក & គ្រូបង្រៀន</div>
+            <div class="value">{{ stats.total_staff }}</div>
+            <div class="subtext">ក្របខ័ណ្ឌ ក: {{ stats.staff_framework_a }} | ខ: {{ stats.staff_framework_b }} | គ: {{ stats.staff_framework_c }}</div>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon teal">
+            <i class="fa-solid fa-user-graduate"></i>
+        </div>
+        <div class="metric-info">
+            <div class="label">សិស្សសរុប ({{ stats.latest_year }})</div>
+            <div class="value">{{ stats.total_students }}</div>
+            <div class="subtext">សិស្សស្រី: {{ stats.female_students }} ({{ ((stats.female_students / stats.total_students)*100)|round(1) if stats.total_students else 0 }}%)</div>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon purple">
+            <i class="fa-solid fa-award"></i>
+        </div>
+        <div class="metric-info">
+            <div class="label">អត្រាប្រឡងជាប់ (បាក់ឌុប)</div>
+            <div class="value">{{ stats.bacii_pass_rate }}%</div>
+            <div class="subtext">ជាប់ 152 / 180 នាក់ (២០២៤-២០២៥)</div>
+        </div>
+    </div>
+</div>
+
+<!-- Section Header -->
+<div style="margin: 24px 0 16px 0; display: flex; align-items: center; justify-content: space-between;">
+    <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0;">
+        <i class="fa-solid fa-chart-column" style="color: var(--accent-gold); margin-right: 8px;"></i>
+        ស្ថិតិសិស្សតាមកម្រិតសិក្សា និងឆ្នាំសិក្សា
+    </h3>
+    <div style="display: flex; gap: 8px;">
+        <a href="{{ url_for('schools') }}" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-school"></i> គ្រប់គ្រងសាលារៀន
+        </a>
+        <a href="{{ url_for('students') }}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-pen"></i> កែប្រែស្ថិតិសិស្ស
+        </a>
+    </div>
+</div>
+
+<!-- 5 Separate Level Bar Charts (Grid) -->
+<div class="grid-2" style="margin-bottom: 24px;">
+    <!-- 1. Community Preschool Bar Chart -->
+    <div class="panel">
+        <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <div class="panel-title">
+                <i class="fa-solid fa-baby" style="color: #ff70a6;"></i> ក្រាបសសរ៖ មត្តេយ្យសិក្សាសហគមន៍
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; color: var(--text-muted);">ឆ្នាំសិក្សា:</span>
+                <select class="form-control" onchange="updateLevelChart('community_preschool', this.value)" style="width: auto; font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--border-color);">
+                    {% for yr in community_preschool_chart.years|reverse %}
+                    <option value="{{ yr }}" {% if yr == stats.latest_year %}selected{% endif %}>{{ yr }}</option>
+                    {% endfor %}
+                    <option value="all">គ្រប់ឆ្នាំសិក្សា</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-container" style="height: 280px;">
+            <canvas id="community_preschoolChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 2. State Preschool Bar Chart -->
+    <div class="panel">
+        <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <div class="panel-title">
+                <i class="fa-solid fa-shapes" style="color: #ffb7b2;"></i> ក្រាបសសរ៖ មត្តេយ្យសិក្សារដ្ឋ
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; color: var(--text-muted);">ឆ្នាំសិក្សា:</span>
+                <select class="form-control" onchange="updateLevelChart('state_preschool', this.value)" style="width: auto; font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--border-color);">
+                    {% for yr in state_preschool_chart.years|reverse %}
+                    <option value="{{ yr }}" {% if yr == stats.latest_year %}selected{% endif %}>{{ yr }}</option>
+                    {% endfor %}
+                    <option value="all">គ្រប់ឆ្នាំសិក្សា</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-container" style="height: 280px;">
+            <canvas id="state_preschoolChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 3. Primary School Bar Chart -->
+    <div class="panel">
+        <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <div class="panel-title">
+                <i class="fa-solid fa-children" style="color: #2a9d8f;"></i> ក្រាបសសរ៖ បឋមសិក្សា
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; color: var(--text-muted);">ឆ្នាំសិក្សា:</span>
+                <select class="form-control" onchange="updateLevelChart('primary', this.value)" style="width: auto; font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--border-color);">
+                    {% for yr in primary_chart.years|reverse %}
+                    <option value="{{ yr }}" {% if yr == stats.latest_year %}selected{% endif %}>{{ yr }}</option>
+                    {% endfor %}
+                    <option value="all">គ្រប់ឆ្នាំសិក្សា</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-container" style="height: 280px;">
+            <canvas id="primaryChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 4. Secondary School Bar Chart -->
+    <div class="panel">
+        <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <div class="panel-title">
+                <i class="fa-solid fa-school" style="color: #0088ff;"></i> ក្រាបសសរ៖ អនុវិទ្យាល័យ
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; color: var(--text-muted);">ឆ្នាំសិក្សា:</span>
+                <select class="form-control" onchange="updateLevelChart('secondary', this.value)" style="width: auto; font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--border-color);">
+                    {% for yr in secondary_chart.years|reverse %}
+                    <option value="{{ yr }}" {% if yr == stats.latest_year %}selected{% endif %}>{{ yr }}</option>
+                    {% endfor %}
+                    <option value="all">គ្រប់ឆ្នាំសិក្សា</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-container" style="height: 280px;">
+            <canvas id="secondaryChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 5. High School Bar Chart -->
+    <div class="panel" style="grid-column: span 2;">
+        <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <div class="panel-title">
+                <i class="fa-solid fa-graduation-cap" style="color: #a29bfe;"></i> ក្រាបសសរ៖ វិទ្យាល័យ
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; color: var(--text-muted);">ឆ្នាំសិក្សា:</span>
+                <select class="form-control" onchange="updateLevelChart('high', this.value)" style="width: auto; font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--border-color);">
+                    {% for yr in high_chart.years|reverse %}
+                    <option value="{{ yr }}" {% if yr == stats.latest_year %}selected{% endif %}>{{ yr }}</option>
+                    {% endfor %}
+                    <option value="all">គ្រប់ឆ្នាំសិក្សា</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-container" style="height: 280px;">
+            <canvas id="highChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Exam Results Section -->
+<div class="panel" style="margin-bottom: 24px;">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-chart-pie" style="color: var(--accent-gold);"></i> លទ្ធផលប្រឡងសញ្ញាបត្រឌីប្លូម និងបាក់ឌុប
+        </div>
+    </div>
+    <div class="chart-container" style="height: 300px;">
+        <canvas id="examChart"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const levelDataMap = {
+            community_preschool: {
+                raw: {{ community_preschool_chart|tojson }},
+                colorTotal: { bg: 'rgba(255, 112, 166, 0.75)', border: '#ff70a6' },
+                colorFemale: { bg: 'rgba(255, 183, 178, 0.85)', border: '#ffb7b2' }
+            },
+            state_preschool: {
+                raw: {{ state_preschool_chart|tojson }},
+                colorTotal: { bg: 'rgba(247, 127, 0, 0.75)', border: '#f77f00' },
+                colorFemale: { bg: 'rgba(252, 191, 73, 0.85)', border: '#fcbf49' }
+            },
+            primary: {
+                raw: {{ primary_chart|tojson }},
+                colorTotal: { bg: 'rgba(42, 157, 143, 0.75)', border: '#2a9d8f' },
+                colorFemale: { bg: 'rgba(233, 196, 106, 0.85)', border: '#e9c46a' }
+            },
+            secondary: {
+                raw: {{ secondary_chart|tojson }},
+                colorTotal: { bg: 'rgba(0, 136, 255, 0.75)', border: '#0088ff' },
+                colorFemale: { bg: 'rgba(229, 169, 59, 0.85)', border: '#e5a93b' }
+            },
+            high: {
+                raw: {{ high_chart|tojson }},
+                colorTotal: { bg: 'rgba(162, 155, 254, 0.75)', border: '#a29bfe' },
+                colorFemale: { bg: 'rgba(253, 121, 168, 0.85)', border: '#fd79a8' }
+            }
+        };
+
+        const chartInstances = {};
+
+        function renderLevelChart(levelKey, selectedYear) {
+            const config = levelDataMap[levelKey];
+            const canvasId = levelKey + 'Chart';
+            let labels = [];
+            let totals = [];
+            let females = [];
+
+            if (selectedYear === 'all') {
+                labels = config.raw.all_years_flat.labels;
+                totals = config.raw.all_years_flat.totals;
+                females = config.raw.all_years_flat.females;
+            } else {
+                const yearData = config.raw.by_year[selectedYear] || [];
+                labels = yearData.map(item => item.school_name);
+                totals = yearData.map(item => item.total);
+                females = yearData.map(item => item.female);
+            }
+
+            if (chartInstances[levelKey]) {
+                chartInstances[levelKey].destroy();
+            }
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            chartInstances[levelKey] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'សិស្សសរុប',
+                            data: totals,
+                            backgroundColor: config.colorTotal.bg,
+                            borderColor: config.colorTotal.border,
+                            borderWidth: 1.5,
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'សិស្សស្រី',
+                            data: females,
+                            backgroundColor: config.colorFemale.bg,
+                            borderColor: config.colorFemale.border,
+                            borderWidth: 1.5,
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#cbd5e1', font: { family: 'Kantumruy Pro', size: 12 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.dataset.label + ': ' + context.parsed.y + ' នាក់';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#94a3b8', font: { family: 'Kantumruy Pro', size: 11 } },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#94a3b8', font: { family: 'Kantumruy Pro', size: 11 } },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.updateLevelChart = function(levelKey, selectedYear) {
+            renderLevelChart(levelKey, selectedYear);
+        };
+
+        // Initial render for all 5 charts defaulting to latest year
+        const latestYear = "{{ stats.latest_year }}";
+        ['community_preschool', 'state_preschool', 'primary', 'secondary', 'high'].forEach(key => {
+            renderLevelChart(key, latestYear);
+        });
+
+        // 6. Exam Results Doughnut Chart
+        const ctxExam = document.getElementById('examChart').getContext('2d');
+        new Chart(ctxExam, {
+            type: 'doughnut',
+            data: {
+                labels: ['និទ្ទេស A', 'និទ្ទេស B', 'និទ្ទេស C', 'និទ្ទេស D', 'និទ្ទេស E'],
+                datasets: [{
+                    data: [5, 18, 42, 50, 37],
+                    backgroundColor: ['#2a9d8f', '#0088ff', '#e5a93b', '#f77f00', '#e63946'],
+                    borderWidth: 2,
+                    borderColor: '#1c2541'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#cbd5e1', font: { family: 'Kantumruy Pro' } } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+

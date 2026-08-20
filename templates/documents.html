@@ -1,0 +1,742 @@
+{% extends 'base.html' %}
+
+{% block header_title %}
+<i class="fa-solid fa-file-contract" style="color: var(--accent-gold);"></i> ៥. គ្រប់គ្រងរដ្ឋបាល និងលិខិតស្នាម
+(Administration & Document Tracking)
+{% endblock %}
+
+{% block content %}
+<!-- Sub-feature Navigation Bar for Feature 5 -->
+<div class="panel"
+    style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(15, 43, 92, 0.85), rgba(28, 37, 65, 0.95)); border: 1px solid var(--border-glow); padding: 18px 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h3
+                style="font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-layer-group" style="color: var(--accent-gold);"></i> ជ្រើសរើសមុខងាររង នៃ «៥.
+                លិខិតស្នាម & បេសកកម្ម»
+            </h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 0;">គ្រប់គ្រង និងតាមដានរាល់លិខិតចេញ-ចូល
+                និងលិខិតបង្គាប់ការបេសកកម្មទាំងអស់</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button id="tab-btn-all" class="btn btn-gold" onclick="switchDocTab('all')">
+                <i class="fa-solid fa-border-all"></i> ទាំងអស់ (All)
+            </button>
+            <button id="tab-btn-letters" class="btn btn-secondary" onclick="switchDocTab('letters')">
+                <i class="fa-solid fa-envelope-open-text"></i> ៥.១ លិខិតចូល-ចេញ <span class="badge badge-primary"
+                    style="margin-left: 6px;">{{ docs_list|length }}</span>
+            </button>
+            <button id="tab-btn-missions" class="btn btn-secondary" onclick="switchDocTab('missions')">
+                <i class="fa-solid fa-plane-departure"></i> ៥.២.បេសកកម្ម <span class="badge badge-gold"
+                    style="margin-left: 6px;">{{ missions_list|length }}</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Official Letters Registry (Sub-Feature 5.1) -->
+<div class="panel" id="section-letters">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-envelope-open-text" style="color: var(--accent-gold);"></i> ៥.១ លិខិតចូល-ចេញ
+            (សៀវភៅកត់ត្រាលិខិតផ្លូវការ ចូល-ចេញ)
+        </div>
+        <button class="btn btn-primary" onclick="openAddDocModal()">
+            <i class="fa-solid fa-plus"></i> ចុះបញ្ជីលិខិតថ្មី
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>លេខលិខិត</th>
+                    <th>ប្រភេទ</th>
+                    <th>កម្មវត្ថុ / ចំណងជើងលិខិត</th>
+                    <th>ប្រភព / គោលដៅ</th>
+                    <th>ប្រភេទលិខិត</th>
+                    <th>កាលបរិច្ឆេទ</th>
+                    <th>ស្ថានភាព</th>
+                    <th>សកម្មភាព</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in docs_list %}
+                <tr>
+                    <td><strong>{{ d.doc_number }}</strong></td>
+                    <td>
+                        {% if d.doc_type == 'inbound' %}
+                        <span class="badge badge-primary"><i class="fa-solid fa-arrow-down-left"></i> លិខិតចូល</span>
+                        {% else %}
+                        <span class="badge badge-gold"><i class="fa-solid fa-arrow-up-right"></i> លិខិតចេញ</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ d.title }}</td>
+                    <td>{{ d.source_destination }}</td>
+                    <td><span class="badge badge-secondary">{{ d.category }}</span></td>
+                    <td>{{ d.doc_date }}</td>
+                    <td><span class="badge badge-success">កត់ត្រារួច</span></td>
+                    <td>
+                        <button class="btn btn-secondary btn-sm" onclick="editDocModal({{ d|tojson|forceescape }})">
+                            <i class="fa-solid fa-pen"></i> កែប្រែ
+                        </button>
+                        <a href="/documents?action=delete&target=document&id={{ d.id }}" class="btn btn-danger btn-sm"
+                            onclick="return confirm('តើអ្នកពិតជាចង់លុបលិខិតនេះមែនទេ?')">
+                            <i class="fa-solid fa-trash"></i> លុប
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Mission Orders Section (Sub-Feature 5.2) -->
+<div class="panel" id="section-missions">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-plane-departure" style="color: var(--accent-gold);"></i> ៥.២.បេសកកម្ម
+            (គ្រប់គ្រងលិខិតបង្គាប់ការ / ចុះបេសកកម្ម)
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="{{ url_for('mission_expense_report') }}" class="btn btn-gold">
+                <i class="fa-solid fa-file-invoice-dollar"></i> របាយការណ៍ចំណាយប្រាក់បេសកកម្ម
+            </a>
+            {% if session.get('role') in ['admin', 'chief'] %}
+            <button class="btn btn-primary" onclick="openAddMissionModal()">
+                <i class="fa-solid fa-file-signature"></i> បង្កើតលិខិតបញ្ជាបេសកកម្ម
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>កូដបេសកកម្ម</th>
+                    <th>កម្មវត្ថុ / បេសកកម្ម</th>
+                    <th>មន្ត្រីទទួលបេសកកម្ម</th>
+                    <th>សាលារៀនគោលដៅ</th>
+                    <th>កាលបរិច្ឆេទ</th>
+                    <th>ស្ថានភាព</th>
+                    <th>សកម្មភាព</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in missions_list %}
+                <tr>
+                    <td><strong>{{ m.mission_code }}</strong></td>
+                    <td>{{ m.title }}</td>
+                    <td>{{ m.officer_names }}</td>
+                    <td>{{ m.destination_schools }}</td>
+                    <td>{{ m.start_date }} ដល់ {{ m.end_date }}</td>
+                    <td>
+                        {% if m.status == 'approved' %}
+                        <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> បានអនុម័ត</span>
+                        {% elif m.status == 'completed' %}
+                        <span class="badge badge-gold"><i class="fa-solid fa-flag-checkered"></i> បានបញ្ចប់</span>
+                        {% else %}
+                        <span class="badge badge-primary"><i class="fa-solid fa-clock"></i> រង់ចាំអនុម័ត</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-gold btn-sm" onclick="viewMissionModal({{ m|tojson|forceescape }})"
+                            title="បោះពុម្ពលិខិតបញ្ជាបេសកកម្ម">
+                            <i class="fa-solid fa-print"></i>បេសកកម្ម
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="viewVisaModal({{ m|tojson|forceescape }})"
+                            title="បោះពុម្ពលិខិតចុះទិដ្ឋាការធ្វើដំណើរ">
+                            <i class="fa-solid fa-print"></i> ទិដ្ឋាការ
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="editMissionModal({{ m|tojson|forceescape }})"
+                            title="កែប្រែ">
+                            <i class="fa-solid fa-pen"></i> កែប្រែ
+                        </button>
+                        <a href="/documents?action=delete&target=mission&id={{ m.id }}" class="btn btn-danger btn-sm"
+                            onclick="return confirm('តើអ្នកពិតជាចង់លុបលិខិតបង្គាប់ការនេះមែនទេ?')" title="លុប">
+                            <i class="fa-solid fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Add/Edit Document -->
+<div class="modal-backdrop" id="addDocumentModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="docModalTitle"><i class="fa-solid fa-file-circle-plus"></i> ចុះបញ្ជីលិខិតផ្លូវការ ចូល-ចេញ</h3>
+            <button class="modal-close" onclick="closeModal('addDocumentModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_document') }}" method="POST">
+            <input type="hidden" name="doc_id" id="doc_id">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>លេខលិខិត</label>
+                        <input type="text" name="doc_number" id="doc_number" class="form-control"
+                            placeholder="ឧ. ១៥២/២៦ អយក.សរ" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ប្រភេទលិខិត</label>
+                        <select name="doc_type" id="doc_type" class="form-control" required>
+                            <option value="inbound">លិខិតចូល (Inbound)</option>
+                            <option value="outbound">លិខិតចេញ (Outbound)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>កម្មវត្ថុ / ចំណងជើងលិខិត</label>
+                    <input type="text" name="title" id="doc_title" class="form-control"
+                        placeholder="ឧ. ណែនាំស្តីពីការរៀបចំប្រឡង..." required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ប្រភព ឬ គោលដៅ</label>
+                        <input type="text" name="source_destination" id="doc_source_destination" class="form-control"
+                            placeholder="ឧ. មន្ទីរអប់រំខេត្តសៀមរាប" required>
+                    </div>
+                    <div class="form-group">
+                        <label>កាលបរិច្ឆេទ</label>
+                        <input type="date" name="doc_date" id="doc_date" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addDocumentModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Add/Edit Mission Order (លិខិតបញ្ជាបេសកកម្ម) -->
+<div class="modal-backdrop" id="addMissionModal">
+    <div class="modal-box" style="max-width: 680px;">
+        <div class="modal-header">
+            <h3 id="missionModalTitle"><i class="fa-solid fa-file-signature"></i> បង្កើតលិខិតបញ្ជាបេសកកម្ម</h3>
+            <button class="modal-close" onclick="closeModal('addMissionModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_mission_order') }}" method="POST">
+            <input type="hidden" name="mission_id" id="mission_id">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>លេខលិខិត (លេខ)</label>
+                        <input type="text" name="mission_code" id="mission_code" class="form-control"
+                            placeholder="ឧ. ១២២" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ថ្ងៃខែស័ក / ថ្ងៃខែខ្មែរ (Khmer Date)</label>
+                        <input type="text" name="lunar_date_str" id="mission_lunar_date_str" class="form-control"
+                            placeholder="ឧ. ថ្ងៃ សុក្រ ១២ រោច ខែមាឃ ឆ្នាំខាល ព.ស ២៥៦៦">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>យោង (លិខិតយោង / លិខិតអញ្ជើញ)</label>
+                    <input type="text" name="ref_doc" id="mission_ref_doc" class="form-control"
+                        placeholder="ឧ. លិខិតអញ្ជើញលេខ ១២២ អយក២.រប ចុះថ្ងៃទី១០ ខែកុម្ភៈ ឆ្នាំ២០២៣ របស់មន្ទីរអប់រំ យុវជន និងកីឡាខេត្តសៀមរាប">
+                </div>
+
+                <div class="form-group">
+                    <label>កម្មវត្ថុ / គោលបំណងបេសកកម្ម</label>
+                    <input type="text" name="title" id="mission_title" class="form-control"
+                        placeholder="ឧ. ចូលរួមសន្និបាតបូកសរុប វាយតម្លៃលទ្ធផលការងារអប់រំ យុវជន និងកីឡា..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>ទីកន្លែងចុះបេសកកម្ម</label>
+                    <input type="text" name="destination_schools" id="mission_destination_schools" class="form-control"
+                        placeholder="ឧ. សាលាគរុកោសល្យ និងវិក្រឹតការខេត្តសៀមរាប" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ថ្ងៃចាប់ផ្តើម</label>
+                        <input type="date" name="start_date" id="mission_start_date" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ថ្ងៃបញ្ចប់</label>
+                        <input type="date" name="end_date" id="mission_end_date" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>បញ្ជីរាយនាមមន្ត្រី និងតួនាទី (មន្ត្រី១នាក់/១ជួរ)</label>
+                    <textarea name="officer_names" id="mission_officer_names" class="form-control" rows="4"
+                        placeholder="ឧ.&#10;១. លោកស្រី គិម ផាន់  នាយិកាវិទ្យាល័យតេជោហ៊ុនសែនអង្គរធំ&#10;២. លោក ជា តិចស៊ីន  នាយកអនុវិទ្យាល័យអង្គរធំ"
+                        required></textarea>
+                </div>
+
+                <div class="form-group" style="display: none;">
+                    <label>ភារកិច្ចបន្ថែម</label>
+                    <textarea name="purpose" id="mission_purpose" class="form-control" rows="1"
+                        placeholder="រៀបរាប់ពីភារកិច្ច..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addMissionModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i>
+                    រក្សាទុកលិខិត</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal View Printable Official Mission Order Letter (លិខិតបញ្ជាបេសកកម្ម) -->
+<div class="modal-backdrop" id="viewMissionModal">
+    <div class="modal-box" style="max-width: 820px; width: 95%;">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-file-signature"></i> លិខិតបញ្ជាបេសកកម្ម ( Official Mission Order Letter )</h3>
+            <button class="modal-close" onclick="closeModal('viewMissionModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="missionPrintArea"
+            style="background: #ffffff; color: #000000; padding: 45px 50px; font-family: 'Kantumruy Pro', 'Khmer OS Battambang', sans-serif; border-radius: 8px; font-size: 14.5px; line-height: 1.8;">
+
+            <!-- Top Header Grid -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <div style="text-align: left; font-weight: 700; line-height: 1.6;">
+                    <div style="font-size: 15.5px;">ខេត្តសៀមរាប</div>
+                    <div style="font-size: 15.5px;">រដ្ឋបាលស្រុកអង្គរធំ</div>
+                    <div style="font-size: 14px; margin-top: 4px;">លេខ៖ <span id="v_mission_code_display"
+                            style="font-weight: 600; border-bottom: 1px dotted #000; padding: 0 10px;">___</span> ល.ប.ប
+                    </div>
+                </div>
+
+                <div style="text-align: center; font-weight: 700; line-height: 1.6; margin-right: 15px;">
+                    <div style="font-size: 16.5px;">ព្រះរាជាណាចក្រកម្ពុជា</div>
+                    <div style="font-size: 15px;">ជាតិ សាសនា ព្រះមហាក្សត្រ</div>
+                    <div style="font-size: 12px; margin-top: 2px; margin-bottom: 6px;">--- ៚ *** ៚ ---</div>
+                    <div id="v_lunar_date_display" style="font-size: 13.5px; font-weight: 500;">
+                        ថ្ងៃ...........................ខែ....................ឆ្នាំ.......................ស័ក ព.ស
+                        ២៥...........</div>
+                    <div id="v_gregorian_date_display" style="font-size: 13.5px; font-weight: 500;">អង្គរធំ
+                        ថ្ងៃទី....... ខែ....... ឆ្នាំ ២០២៣</div>
+                </div>
+            </div>
+
+            <!-- Central Highlighted Title -->
+            <div style="text-align: center; margin: 22px 0 20px 0;">
+                <span
+                    style="font-size: 19px; font-weight: 700; background-color: #b4c6e7; padding: 4px 22px; border-radius: 4px; display: inline-block; color: #000;">
+                    លិខិតបញ្ជាបេសកកម្ម
+                </span>
+            </div>
+
+            <!-- Body Content -->
+            <div style="text-align: justify; text-justify: inter-word; color: #000;">
+                <p style="margin-bottom: 10px;">
+                    <strong>យោង៖</strong> <span id="v_ref_doc_display">លិខិតអញ្ជើញលេខ ១២២ អយក២.រប ចុះថ្ងៃទី១០ ខែកុម្ភៈ
+                        ឆ្នាំ២០២៣ របស់មន្ទីរអប់រំ យុវជន និងកីឡាខេត្តសៀមរាប។</span>
+                </p>
+
+                <p style="text-indent: 45px; margin-bottom: 12px; line-height: 1.85;">
+                    ត្រូវបានចាត់តាំងមន្ត្រីឱ្យទៅបំពេញបេសកកម្មនៅ <strong id="v_destination_schools_display"
+                        style="text-decoration: underline;">សាលាគរុកោសល្យ និងវិក្រឹតការខេត្តសៀមរាប</strong> ដើម្បី
+                    <strong id="v_title_display">ចូលរួមសន្និបាតបូកសរុប វាយតម្លៃលទ្ធផលការងារអប់រំ យុវជន
+                        និងកីឡា...</strong> ចាប់ពីថ្ងៃទី <strong id="v_start_date_display">២០ ខែកុម្ភៈ
+                        ឆ្នាំ២០២៣</strong> ដល់ថ្ងៃទី <strong id="v_end_date_display">២១ ខែកុម្ភៈ ឆ្នាំ២០២៣</strong>
+                    ដូចមានរាយនាមខាងក្រោម ៖
+                </p>
+
+                <!-- Officer List Table -->
+                <div id="v_officers_list_box" style="margin-left: 45px; margin-top: 10px; margin-bottom: 20px;">
+                    <!-- Dynamically injected officer lines -->
+                </div>
+
+                <p style="text-indent: 45px; margin-top: 15px; margin-bottom: 25px; line-height: 1.85;">
+                    សូមបណ្តាអង្គភាពមានសមត្ថកិច្ច មេត្តាទទួលស្គាល់ ជួយសម្រួល
+                    និងផ្តល់ការគាំទ្រចាំបាច់នានាដល់មន្ត្រីដែលមានឈ្មោះខាងលើ ឱ្យបំពេញភារកិច្ចប្រកបដោយជោគជ័យ។
+                </p>
+            </div>
+
+            <!-- Bottom Signature Block -->
+            <div style="display: flex; justify-content: flex-end; margin-top: 30px; text-align: center;">
+                <div style="min-width: 220px;">
+                    <div style="font-size: 16px; font-weight: 700;">អភិបាលស្រុក</div>
+                    <div style="height: 90px;"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('viewMissionModal')">បិទ</button>
+        <button type="button" class="btn btn-primary" onclick="printElement('missionPrintArea')">
+            <i class="fa-solid fa-print"></i> បោះពុម្ពលិខិតបញ្ជាបេសកកម្ម
+        </button>
+    </div>
+</div>
+</div>
+
+<!-- Modal View Printable Travel Visa Order Letter (លិខិតចុះទិដ្ឋាការធ្វើដំណើរ) -->
+<div class="modal-backdrop" id="viewVisaModal">
+    <div class="modal-box" style="max-width: 820px; width: 95%;">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-passport"></i> លិខិតចុះទិដ្ឋាការធ្វើដំណើរ ( Travel Visa Order Letter )</h3>
+            <button class="modal-close" onclick="closeModal('viewVisaModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="visaPrintArea"
+            style="background: #ffffff; color: #000000; padding: 45px 50px; font-family: 'Kantumruy Pro', 'Khmer OS Battambang', sans-serif; border-radius: 8px; font-size: 14.5px; line-height: 1.8;">
+
+            <!-- Top Header Grid -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <div style="text-align: left; font-weight: 700; line-height: 1.6;">
+                    <div style="font-size: 15.5px;">ខេត្តសៀមរាប</div>
+                    <div style="font-size: 15.5px;">រដ្ឋបាលស្រុកអង្គរធំ</div>
+                </div>
+
+                <div style="text-align: center; font-weight: 700; line-height: 1.6; margin-right: 15px;">
+                    <div style="font-size: 16.5px;">ព្រះរាជាណាចក្រកម្ពុជា</div>
+                    <div style="font-size: 15px;">ជាតិ សាសនា ព្រះមហាក្សត្រ</div>
+                    <div style="font-size: 12px; margin-top: 2px; margin-bottom: 6px;">--- ៚ *** ៚ ---</div>
+                    <div id="vv_lunar_date" style="font-size: 13.5px; font-weight: 500;">
+                        ថ្ងៃ...........................ខែ....................ឆ្នាំ.......................ស័ក ព.ស
+                        ២៥...........</div>
+                    <div id="vv_gregorian_date" style="font-size: 13.5px; font-weight: 500;">អង្គរធំ ថ្ងៃទី.......
+                        ខែ....... ឆ្នាំ ២០២៣</div>
+                </div>
+            </div>
+
+            <!-- Central Title -->
+            <div style="text-align: center; margin: 20px 0 22px 0;">
+                <span style="font-size: 19px; font-weight: 700; color: #000; display: inline-block;">
+                    លិខិតចុះទិដ្ឋាការធ្វើដំណើរ
+                </span>
+            </div>
+
+            <!-- Information Details Grid with Colons -->
+            <div style="margin-left: 50px; margin-bottom: 25px; font-size: 14.5px; line-height: 2.1;">
+                <div style="display: grid; grid-template-columns: 190px 10px 1fr; align-items: baseline;">
+                    <div>ផ្តល់ជូន</div>
+                    <div>៖</div>
+                    <div><strong id="vv_officer_name">លោក សុង ស៊ូ</strong></div>
+
+                    <div>ឋានៈ និងអង្គភាព</div>
+                    <div>៖</div>
+                    <div><strong id="vv_officer_position">អនុប្រធានកម្រងដូនឱ</strong></div>
+
+                    <div>បំពេញបេសកកម្មនៅ</div>
+                    <div>៖</div>
+                    <div><strong id="vv_destination">សាលាគរុកោសល្យ និងវិក្រឹតការខេត្តសៀមរាប</strong></div>
+
+                    <div>តាមលិខិតបញ្ជាបេសកកម្ម</div>
+                    <div>៖</div>
+                    <div>លេខ <strong id="vv_code">_____</strong> ល.ប.ប ចុះថ្ងៃទី <strong id="vv_code_date">១៧ ខែកុម្ភៈ
+                            ឆ្នាំ២០២៣</strong></div>
+
+                    <div style="align-self: start;">រយៈពេលបេសកកម្ម</div>
+                    <div style="align-self: start;">៖</div>
+                    <div>
+                        <div>ចាប់ពីថ្ងៃទី <strong id="vv_start_date">២០ ខែកុម្ភៈ ឆ្នាំ២០២៣</strong></div>
+                        <div>ដល់ថ្ងៃទី <strong id="vv_end_date">២១ ខែកុម្ភៈ ឆ្នាំ២០២៣</strong></div>
+                    </div>
+
+                    <div>មធ្យោបាយធ្វើដំណើរ</div>
+                    <div>៖</div>
+                    <div><strong id="vv_transport">ម៉ូតូ</strong></div>
+                </div>
+            </div>
+
+            <!-- Signature Right Aligned -->
+            <div
+                style="display: flex; justify-content: flex-end; margin-top: 15px; margin-bottom: 30px; text-align: center;">
+                <div style="min-width: 200px;">
+                    <div style="font-size: 16px; font-weight: 700;">អភិបាលស្រុក</div>
+                    <div style="height: 75px;"></div>
+                </div>
+            </div>
+
+            <!-- Travel Log Table matching uploaded image -->
+            <table
+                style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 13.5px; line-height: 1.5; text-align: center;">
+                <thead>
+                    <tr style="font-weight: 700; background-color: #f2f2f2;">
+                        <th style="border: 1px solid #000; padding: 8px 6px; width: 180px;">កន្លែងចេញដំណើរ និងមកដល់</th>
+                        <th style="border: 1px solid #000; padding: 8px 6px; width: 110px;">ថ្ងៃ ខែ ឆ្នាំ</th>
+                        <th style="border: 1px solid #000; padding: 8px 6px; width: 90px;">មធ្យោបាយ ធ្វើដំណើរ</th>
+                        <th style="border: 1px solid #000; padding: 8px 6px; width: 60px;">ចម្ងាយ</th>
+                        <th style="border: 1px solid #000; padding: 8px 6px; width: 70px;">ចំនួនថ្ងៃ ស្នាក់នៅ</th>
+                        <th style="border: 1px solid #000; padding: 8px 6px;">សេចក្តីបញ្ជាក់របស់អង្គភាព ហត្ថលេខា និងត្រា
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="vv_table_rows">
+                    <!-- Dynamically generated travel log rows -->
+                </tbody>
+            </table>
+
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('viewVisaModal')">បិទ</button>
+            <button type="button" class="btn btn-primary" onclick="printElement('visaPrintArea')">
+                <i class="fa-solid fa-print"></i> បោះពុម្ពលិខិតចុះទិដ្ឋាការ
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function printElement(elementId) {
+        const elem = document.getElementById(elementId);
+        if (!elem) return;
+        const printWindow = window.open('', '_blank', 'height=850,width=950');
+        printWindow.document.write('<!DOCTYPE html><html><head><title>បោះពុម្ពលិខិតបញ្ជាបេសកកម្ម</title>');
+        printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">');
+        printWindow.document.write('<style>');
+        printWindow.document.write('@page { size: A4 portrait; margin: 15mm 20mm; }');
+        printWindow.document.write('body { font-family: "Kantumruy Pro", "Khmer OS Battambang", sans-serif; background: #ffffff; color: #000000; margin: 0; padding: 20px; font-size: 14.5px; line-height: 1.8; -webkit-print-color-adjust: exact; print-color-adjust: exact; }');
+        printWindow.document.write('table { border-collapse: collapse; width: 100%; }');
+        printWindow.document.write('</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(elem.innerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(function () {
+            printWindow.print();
+            printWindow.close();
+        }, 500);
+    }
+
+    function openAddDocModal() {
+        document.getElementById('docModalTitle').innerHTML = '<i class="fa-solid fa-file-circle-plus"></i> ចុះបញ្ជីលិខិតផ្លូវការ ចូល-ចេញ';
+        document.getElementById('doc_id').value = '';
+        document.getElementById('doc_number').value = '';
+        document.getElementById('doc_type').value = 'inbound';
+        document.getElementById('doc_title').value = '';
+        document.getElementById('doc_source_destination').value = '';
+        document.getElementById('doc_date').value = '';
+        openModal('addDocumentModal');
+    }
+
+    function openAddMissionModal() {
+        document.getElementById('missionModalTitle').innerHTML = '<i class="fa-solid fa-file-signature"></i> បង្កើតលិខិតបញ្ជាបេសកកម្ម';
+        document.getElementById('mission_id').value = '';
+        document.getElementById('mission_code').value = '';
+        if (document.getElementById('mission_lunar_date_str')) document.getElementById('mission_lunar_date_str').value = '';
+        if (document.getElementById('mission_ref_doc')) document.getElementById('mission_ref_doc').value = '';
+        document.getElementById('mission_title').value = '';
+        document.getElementById('mission_officer_names').value = '';
+        document.getElementById('mission_destination_schools').value = '';
+        document.getElementById('mission_start_date').value = '';
+        document.getElementById('mission_end_date').value = '';
+        document.getElementById('mission_purpose').value = '';
+        openModal('addMissionModal');
+    }
+
+    function viewMissionModal(m) {
+        if (document.getElementById('v_mission_code_display')) document.getElementById('v_mission_code_display').innerText = m.mission_code || '___';
+        if (document.getElementById('v_lunar_date_display')) document.getElementById('v_lunar_date_display').innerText = m.lunar_date_str || 'ថ្ងៃ...........................ខែ....................ឆ្នាំ.......................ស័ក  ព.ស ២៥...........';
+        if (document.getElementById('v_gregorian_date_display')) document.getElementById('v_gregorian_date_display').innerText = 'អង្គរធំ ថ្ងៃទី....... ខែ....... ឆ្នាំ ២០២៣';
+        if (document.getElementById('v_ref_doc_display')) document.getElementById('v_ref_doc_display').innerText = m.ref_doc || 'លិខិតអញ្ជើញលេខ ១២២ អយក២.រប ចុះថ្ងៃទី១០ ខែកុម្ភៈ ឆ្នាំ២០២៣ របស់មន្ទីរអប់រំ យុវជន និងកីឡាខេត្តសៀមរាប។';
+        if (document.getElementById('v_destination_schools_display')) document.getElementById('v_destination_schools_display').innerText = m.destination_schools || '';
+        if (document.getElementById('v_title_display')) document.getElementById('v_title_display').innerText = m.title || '';
+        if (document.getElementById('v_start_date_display')) document.getElementById('v_start_date_display').innerText = m.start_date || '';
+        if (document.getElementById('v_end_date_display')) document.getElementById('v_end_date_display').innerText = m.end_date || '';
+
+        // Render officers list into box matching image
+        const listBox = document.getElementById('v_officers_list_box');
+        if (listBox) {
+            let html = '';
+            if (m.officer_names) {
+                const lines = m.officer_names.split('\n').filter(l => l.trim().length > 0);
+                html += '<table style="width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.8;">';
+                lines.forEach(line => {
+                    html += `<tr><td style="padding: 2px 0; font-weight: 500;">${line}</td></tr>`;
+                });
+                html += '</table>';
+            }
+            listBox.innerHTML = html;
+        }
+
+        openModal('viewMissionModal');
+    }
+
+    function viewVisaModal(m) {
+        if (document.getElementById('vv_officer_name')) document.getElementById('vv_officer_name').innerText = m.officer_names || 'លោក';
+        if (document.getElementById('vv_officer_position')) document.getElementById('vv_officer_position').innerText = m.remarks || 'អនុប្រធានកម្រងដូនឱ';
+        if (document.getElementById('vv_destination')) document.getElementById('vv_destination').innerText = m.destination_schools || '';
+        if (document.getElementById('vv_code')) document.getElementById('vv_code').innerText = m.mission_code || '_____';
+        if (document.getElementById('vv_code_date')) document.getElementById('vv_code_date').innerText = m.start_date || '';
+        if (document.getElementById('vv_start_date')) document.getElementById('vv_start_date').innerText = m.start_date || '';
+        if (document.getElementById('vv_end_date')) document.getElementById('vv_end_date').innerText = m.end_date || '';
+        if (document.getElementById('vv_lunar_date')) document.getElementById('vv_lunar_date').innerText = m.lunar_date_str || 'ថ្ងៃ...........................ខែ....................ឆ្នាំ.......................ស័ក  ព.ស ២៥...........';
+        if (document.getElementById('vv_gregorian_date')) document.getElementById('vv_gregorian_date').innerText = 'អង្គរធំ ថ្ងៃទី....... ខែ....... ឆ្នាំ ២០២៣';
+        if (document.getElementById('vv_transport')) document.getElementById('vv_transport').innerText = m.purpose || 'ម៉ូតូ';
+
+        const tbody = document.getElementById('vv_table_rows');
+        if (tbody) {
+            const dest = m.destination_schools || 'សាលាគរុកោសល្យ និងវិក្រឹតការខេត្តសៀមរាប';
+            const start = m.start_date || '២០.០២.២០២៣';
+            const end = m.end_date || '២១.០២.២០២៣';
+            const transport = 'ម៉ូតូ';
+
+            tbody.innerHTML = `
+                <tr>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">ចេញដំណើរពី <strong>រដ្ឋបាលស្រុកអង្គរធំ</strong></td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">${start}</td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">${transport}</td>
+                    <td style="border: 1px solid #000;"></td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">.........</td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">...................................................</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">កន្លែងមកដល់ <strong>${dest}</strong></td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">${start}</td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">${transport}</td>
+                    <td style="border: 1px solid #000;"></td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">.........</td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">...................................................</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">ចេញដំណើរពី <strong>${dest}</strong></td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">${end}</td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">${transport}</td>
+                    <td style="border: 1px solid #000;"></td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">.........</td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">...................................................</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">កន្លែងមកដល់ <strong>រដ្ឋបាលស្រុកអង្គរធំ</strong></td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">${end}</td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">${transport}</td>
+                    <td style="border: 1px solid #000;"></td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">.........</td>
+                    <td style="border: 1px solid #000; padding: 10px 6px; text-align: center;">...................................................</td>
+                </tr>
+            `;
+        }
+
+        openModal('viewVisaModal');
+    }
+
+    function editMissionModal(m, mission_code, title, officer_names, destination_schools, start_date, end_date, purpose) {
+        let id, code, t, officers, dests, start, end, purp, ref, lunar;
+        if (typeof m === 'object' && m !== null) {
+            id = m.id;
+            code = m.mission_code;
+            t = m.title;
+            officers = m.officer_names;
+            dests = m.destination_schools;
+            start = m.start_date;
+            end = m.end_date;
+            purp = m.purpose;
+            ref = m.ref_doc;
+            lunar = m.lunar_date_str;
+        } else {
+            id = m;
+            code = mission_code;
+            t = title;
+            officers = officer_names;
+            dests = destination_schools;
+            start = start_date;
+            end = end_date;
+            purp = purpose;
+        }
+        document.getElementById('missionModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> កែប្រែលិខិតបញ្ជាបេសកកម្ម';
+        if (document.getElementById('mission_id')) document.getElementById('mission_id').value = id || '';
+        if (document.getElementById('mission_code')) document.getElementById('mission_code').value = code || '';
+        if (document.getElementById('mission_lunar_date_str')) document.getElementById('mission_lunar_date_str').value = lunar || '';
+        if (document.getElementById('mission_ref_doc')) document.getElementById('mission_ref_doc').value = ref || '';
+        if (document.getElementById('mission_title')) document.getElementById('mission_title').value = t || '';
+        if (document.getElementById('mission_officer_names')) document.getElementById('mission_officer_names').value = officers || '';
+        if (document.getElementById('mission_destination_schools')) document.getElementById('mission_destination_schools').value = dests || '';
+        if (document.getElementById('mission_start_date')) document.getElementById('mission_start_date').value = start || '';
+        if (document.getElementById('mission_end_date')) document.getElementById('mission_end_date').value = end || '';
+        if (document.getElementById('mission_purpose')) document.getElementById('mission_purpose').value = purp || '';
+        openModal('addMissionModal');
+    }
+
+    function editDocModal(doc, doc_number, doc_type, title, source_destination, doc_date) {
+        let id, num, type, t, src, dt;
+        if (typeof doc === 'object' && doc !== null) {
+            id = doc.id;
+            num = doc.doc_number;
+            type = doc.doc_type;
+            t = doc.title;
+            src = doc.source_destination;
+            dt = doc.doc_date;
+        } else {
+            id = doc;
+            num = doc_number;
+            type = doc_type;
+            t = title;
+            src = source_destination;
+            dt = doc_date;
+        }
+        document.getElementById('docModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> កែប្រែព័ត៌មានលិខិតផ្លូវការ';
+        if (document.getElementById('doc_id')) document.getElementById('doc_id').value = id || '';
+        if (document.getElementById('doc_number')) document.getElementById('doc_number').value = num || '';
+        if (document.getElementById('doc_type')) document.getElementById('doc_type').value = type || 'inbound';
+        if (document.getElementById('doc_title')) document.getElementById('doc_title').value = t || '';
+        if (document.getElementById('doc_source_destination')) document.getElementById('doc_source_destination').value = src || '';
+        if (document.getElementById('doc_source_dest')) document.getElementById('doc_source_dest').value = src || '';
+        if (document.getElementById('doc_date')) document.getElementById('doc_date').value = dt || '';
+        openModal('addDocumentModal');
+    }
+
+    function switchDocTab(tabName) {
+        const secLetters = document.getElementById('section-letters');
+        const secMissions = document.getElementById('section-missions');
+        const btnAll = document.getElementById('tab-btn-all');
+        const btnLetters = document.getElementById('tab-btn-letters');
+        const btnMissions = document.getElementById('tab-btn-missions');
+        const subnavLetters = document.getElementById('subnav-letters');
+        const subnavMissions = document.getElementById('subnav-missions');
+
+        if (!secLetters || !secMissions) return;
+
+        // Remove active class from subnav links
+        if (subnavLetters) subnavLetters.classList.remove('active-subnav');
+        if (subnavMissions) subnavMissions.classList.remove('active-subnav');
+
+        if (tabName === 'letters') {
+            secLetters.style.display = 'block';
+            secMissions.style.display = 'none';
+
+            btnAll.className = 'btn btn-secondary';
+            btnLetters.className = 'btn btn-gold';
+            btnMissions.className = 'btn btn-secondary';
+
+            if (subnavLetters) subnavLetters.classList.add('active-subnav');
+        } else if (tabName === 'missions') {
+            secLetters.style.display = 'none';
+            secMissions.style.display = 'block';
+
+            btnAll.className = 'btn btn-secondary';
+            btnLetters.className = 'btn btn-secondary';
+            btnMissions.className = 'btn btn-gold';
+
+            if (subnavMissions) subnavMissions.classList.add('active-subnav');
+        } else {
+            secLetters.style.display = 'block';
+            secMissions.style.display = 'block';
+
+            btnAll.className = 'btn btn-gold';
+            btnLetters.className = 'btn btn-secondary';
+            btnMissions.className = 'btn btn-secondary';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sub = urlParams.get('sub');
+        if (sub === 'letters' || sub === 'missions') {
+            switchDocTab(sub);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,503 @@
+{% extends 'base.html' %}
+
+{% block header_title %}
+<i class="fa-solid fa-user-tie" style="color: var(--accent-gold);"></i> ២. គ្រប់គ្រងបុគ្គលិកអប់រំ និងគ្រូបង្រៀន (Staff & Teacher Management)
+{% endblock %}
+
+{% block content %}
+<!-- Top Sub-Navigation Panel -->
+<div class="panel" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(15, 43, 92, 0.85), rgba(28, 37, 65, 0.95)); border: 1px solid var(--border-glow); padding: 18px 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h3 style="font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-layer-group" style="color: var(--accent-gold);"></i> ជ្រើសរើសមុខងាររង នៃ «២. គ្រប់គ្រងបុគ្គលិក & គ្រូ»
+            </h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 0;">គ្រប់គ្រងប្រវត្តិរូបគ្រូបង្រៀន បុគ្គលិកតាមសាលារៀន និងបុគ្គលិកការិយាល័យអប់រំ ស្រុកអង្គរធំ</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button id="tab-btn-all" class="btn btn-secondary active-tab" onclick="switchStaffTab('all')">
+                <i class="fa-solid fa-border-all"></i> ទាំងអស់ (All)
+            </button>
+            <button id="tab-btn-school" class="btn btn-secondary" onclick="switchStaffTab('school')">
+                <i class="fa-solid fa-chalkboard-user"></i> ២.១ គ្រូ & បុគ្គលិកសាលា <span class="badge badge-primary" style="margin-left: 6px;">{{ staff_list|length }}</span>
+            </button>
+            <button id="tab-btn-office" class="btn btn-secondary" onclick="switchStaffTab('office')">
+                <i class="fa-solid fa-building-user"></i> ២.២ បុគ្គលិកការិយាល័យ <span class="badge badge-gold" style="margin-left: 6px;">{{ office_staff_list|length }}</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Section 2.1: School Staff & Teachers -->
+<div class="panel" id="section-school-staff">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-chalkboard-user" style="color: var(--accent-gold);"></i> ២.១ ប្រវត្តិរូបគ្រូបង្រៀន និងបុគ្គលិកអប់រំតាមសាលារៀន (School Staff & Teachers)
+        </div>
+        {% if session.get('role') in ['admin', 'chief'] %}
+        <button class="btn btn-primary" onclick="openAddStaffModal()">
+            <i class="fa-solid fa-user-plus"></i> បន្ថែមគ្រូ/បុគ្គលិកសាលាថ្មី
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>អត្តលេខ</th>
+                    <th>គោត្តនាម-នាម</th>
+                    <th>ភេទ</th>
+                    <th>សាលារៀនបម្រើការ</th>
+                    <th>ក្របខ័ណ្ឌ</th>
+                    <th>តួនាទី</th>
+                    <th>ជំនាញ/មុខវិជ្ជា</th>
+                    <th>ស្ថានភាព</th>
+                    <th>លេខទូរស័ព្ទ</th>
+                    <th>សកម្មភាព</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in staff_list %}
+                <tr>
+                    <td><strong>{{ s.staff_id_num }}</strong></td>
+                    <td>
+                        <div style="font-weight: 600; color: #fff;">{{ s.name_kh }}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">{{ s.name_en }}</div>
+                    </td>
+                    <td>{{ 'ប្រុស' if s.sex == 'M' else 'ស្រី' }}</td>
+                    <td>{{ s.school_name }}</td>
+                    <td>
+                        {% if s.framework == 'A' %}
+                        <span class="badge badge-gold">ក្របខ័ណ្ឌ ក</span>
+                        {% elif s.framework == 'B' %}
+                        <span class="badge badge-primary">ក្របខ័ណ្ឌ ខ</span>
+                        {% else %}
+                        <span class="badge badge-success">ក្របខ័ណ្ឌ គ</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ s.position }}</td>
+                    <td>{{ s.subject_specialty }}</td>
+                    <td>
+                        {% if s.status == 'active' %}
+                        <span class="badge badge-success">កំពុងបម្រើការ</span>
+                        {% elif s.status == 'transferred' %}
+                        <span class="badge badge-gold">បានផ្ទេរ</span>
+                        {% else %}
+                        <span class="badge badge-secondary">និវត្តន៍</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ s.phone }}</td>
+                    <td>
+                        {% if session.get('role') in ['admin', 'chief'] %}
+                        <button class="btn btn-secondary btn-sm" onclick="editStaff({{ s|tojson|forceescape }})">
+                            <i class="fa-solid fa-pen-to-square"></i> កែប្រែ
+                        </button>
+                        <a href="/staff?action=delete&target=staff&id={{ s.id }}&sub=school" class="btn btn-danger btn-sm" onclick="return confirm('តើអ្នកពិតជាចង់លុបទិន្នន័យគ្រូបង្រៀននេះមែនទេ?')">
+                            <i class="fa-solid fa-trash"></i> លុប
+                        </a>
+                        {% else %}
+                        <span class="badge badge-secondary">មើល</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Section 2.2: District Office Staff -->
+<div class="panel" id="section-office-staff" style="margin-top: 24px;">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-building-user" style="color: var(--accent-gold);"></i> ២.២ បុគ្គលិកការិយាល័យអប់រំ យុវជន និងកីឡា ស្រុកអង្គរធំ (District Education Office Staff)
+        </div>
+        {% if session.get('role') in ['admin', 'chief'] %}
+        <button class="btn btn-gold" onclick="openAddOfficeStaffModal()">
+            <i class="fa-solid fa-user-tie"></i> បន្ថែមបុគ្គលិកការិយាល័យថ្មី
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>អត្តលេខ</th>
+                    <th>គោត្តនាម-នាម</th>
+                    <th>ភេទ</th>
+                    <th>ផ្នែក / អង្គភាព</th>
+                    <th>ក្របខ័ណ្ឌ</th>
+                    <th>តួនាទី / មុខតំណែង</th>
+                    <th>ថ្នាក់/សក្ដិ</th>
+                    <th>ទំនាក់ទំនង</th>
+                    <th>ស្ថានភាព</th>
+                    <th>សកម្មភាព</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for os in office_staff_list %}
+                <tr>
+                    <td><strong>{{ os.staff_id_num }}</strong></td>
+                    <td>
+                        <div style="font-weight: 600; color: #fff;">{{ os.name_kh }}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">{{ os.name_en }}</div>
+                    </td>
+                    <td>{{ 'ប្រុស' if os.sex == 'M' else 'ស្រី' }}</td>
+                    <td><span class="badge badge-primary">{{ os.office_unit }}</span></td>
+                    <td>
+                        {% if os.framework == 'A' %}
+                        <span class="badge badge-gold">ក្របខ័ណ្ឌ ក</span>
+                        {% elif os.framework == 'B' %}
+                        <span class="badge badge-primary">ក្របខ័ណ្ឌ ខ</span>
+                        {% else %}
+                        <span class="badge badge-success">ក្របខ័ណ្ឌ គ</span>
+                        {% endif %}
+                    </td>
+                    <td><strong style="color: var(--accent-gold);">{{ os.position }}</strong></td>
+                    <td>{{ os.current_grade or '-' }}</td>
+                    <td>
+                        <div><i class="fa-solid fa-phone" style="font-size: 11px; color: var(--accent-gold);"></i> {{ os.phone or '-' }}</div>
+                        {% if os.email %}<div style="font-size: 11px; color: var(--text-muted);"><i class="fa-solid fa-envelope"></i> {{ os.email }}</div>{% endif %}
+                    </td>
+                    <td>
+                        {% if os.status == 'active' %}
+                        <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> កំពុងបម្រើការ</span>
+                        {% elif os.status == 'transferred' %}
+                        <span class="badge badge-gold">បានផ្ទេរ</span>
+                        {% else %}
+                        <span class="badge badge-secondary">និវត្តន៍</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if session.get('role') in ['admin', 'chief'] %}
+                        <button class="btn btn-secondary btn-sm" onclick="editOfficeStaffModal({{ os|tojson|forceescape }})">
+                            <i class="fa-solid fa-pen-to-square"></i> កែប្រែ
+                        </button>
+                        <a href="/staff?action=delete&target=office_staff&id={{ os.id }}&sub=office" class="btn btn-danger btn-sm" onclick="return confirm('តើអ្នកពិតជាចង់លុបទិន្នន័យបុគ្គលិកការិយាល័យនេះមែនទេ?')">
+                            <i class="fa-solid fa-trash"></i> លុប
+                        </a>
+                        {% else %}
+                        <span class="badge badge-secondary">មើល</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Add / Edit School Staff -->
+<div class="modal-backdrop" id="addStaffModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="staffModalTitle"><i class="fa-solid fa-user-plus"></i> បន្ថែមប្រវត្តិរូបគ្រូ/បុគ្គលិកអប់រំ</h3>
+            <button class="modal-close" onclick="closeModal('addStaffModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_staff') }}" method="POST">
+            <input type="hidden" name="staff_id" id="staff_id">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>អត្តលេខមន្ត្រីរាជការ</label>
+                        <input type="text" name="staff_id_num" id="staff_id_num" class="form-control" placeholder="ឧ. T-00105" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ភេទ</label>
+                        <select name="sex" id="staff_sex" class="form-control" required>
+                            <option value="M">ប្រុស (Male)</option>
+                            <option value="F">ស្រី (Female)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ឈ្មោះជាភាសាខ្មែរ</label>
+                        <input type="text" name="name_kh" id="staff_name_kh" class="form-control" placeholder="ឧ. លោក សុខ ចាន់" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ឈ្មោះជាភាសាអង់គ្លេស</label>
+                        <input type="text" name="name_en" id="staff_name_en" class="form-control" placeholder="ឧ. Sok Chan" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>សាលារៀនបម្រើការ</label>
+                        <select name="school_id" id="staff_school_id" class="form-control" required>
+                            {% for sch in schools %}
+                            <option value="{{ sch.id }}">{{ sch.name_kh }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ក្របខ័ណ្ឌ (Framework)</label>
+                        <select name="framework" id="staff_framework" class="form-control" required>
+                            <option value="A">ក្របខ័ណ្ឌ ក (កម្រិតឧត្តម)</option>
+                            <option value="B">ក្របខ័ណ្ឌ ខ (កម្រិតមូលដ្ឋាន)</option>
+                            <option value="C">ក្របខ័ណ្ឌ គ (បឋមសិក្សា)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>តួនាទី (Position)</label>
+                        <input type="text" name="position" id="staff_position" class="form-control" placeholder="ឧ. គ្រូបង្រៀនកម្រិតមូលដ្ឋាន" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ជំនាញ/មុខវិជ្ជាបង្រៀន</label>
+                        <input type="text" name="subject_specialty" id="staff_subject_specialty" class="form-control" placeholder="ឧ. គណិតវិទ្យា" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ថ្នាក់/កាំប្រាក់បច្ចុប្បន្ន</label>
+                        <input type="text" name="current_grade" id="staff_current_grade" class="form-control" placeholder="ឧ. ខ.២.១">
+                    </div>
+                    <div class="form-group">
+                        <label>លេខទូរស័ព្ទ</label>
+                        <input type="text" name="phone" id="staff_phone" class="form-control" placeholder="012 345 678">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addStaffModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Add / Edit Office Staff -->
+<div class="modal-backdrop" id="addOfficeStaffModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="officeStaffModalTitle"><i class="fa-solid fa-user-tie"></i> បន្ថែមប្រវត្តិរូបបុគ្គលិកការិយាល័យអប់រំ</h3>
+            <button class="modal-close" onclick="closeModal('addOfficeStaffModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_office_staff') }}" method="POST">
+            <input type="hidden" name="office_staff_id" id="office_staff_id">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>អត្តលេខមន្ត្រីរាជការ</label>
+                        <input type="text" name="staff_id_num" id="os_staff_id_num" class="form-control" placeholder="ឧ. OFF-001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ភេទ</label>
+                        <select name="sex" id="os_sex" class="form-control" required>
+                            <option value="M">ប្រុស (Male)</option>
+                            <option value="F">ស្រី (Female)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ឈ្មោះជាភាសាខ្មែរ</label>
+                        <input type="text" name="name_kh" id="os_name_kh" class="form-control" placeholder="ឧ. លោក រ៉ាត់ សំអឿន" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ឈ្មោះជាភាសាអង់គ្លេស</label>
+                        <input type="text" name="name_en" id="os_name_en" class="form-control" placeholder="ឧ. Rat Samoeun" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ផ្នែក / អង្គភាពការិយាល័យ</label>
+                        <select name="office_unit" id="os_office_unit" class="form-control" required>
+                            <option value="ថ្នាក់ដឹកនាំការិយាល័យ">ថ្នាក់ដឹកនាំការិយាល័យ</option>
+                            <option value="ផ្នែករដ្ឋបាល និងបុគ្គលិក">ផ្នែករដ្ឋបាល និងបុគ្គលិក</option>
+                            <option value="ផ្នែកបឋមសិក្សា">ផ្នែកបឋមសិក្សា</option>
+                            <option value="ផ្នែកមធ្យមសិក្សា">ផ្នែកមធ្យមសិក្សា</option>
+                            <option value="ផ្នែកយុវជន និងកីឡា">ផ្នែកយុវជន និងកីឡា</option>
+                            <option value="ផ្នែកព័ត៌មានវិទ្យា និងស្ថិតិ">ផ្នែកព័ត៌មានវិទ្យា និងស្ថិតិ</option>
+                            <option value="ផ្នែកផែនការ និងហិរញ្ញវត្ថុ">ផ្នែកផែនការ និងហិរញ្ញវត្ថុ</option>
+                            <option value="ផ្នែកធានាគុណភាពអប់រំ">ផ្នែកធានាគុណភាពអប់រំ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ក្របខ័ណ្ឌ (Framework)</label>
+                        <select name="framework" id="os_framework" class="form-control" required>
+                            <option value="A">ក្របខ័ណ្ឌ ក (កម្រិតឧត្តម)</option>
+                            <option value="B">ក្របខ័ណ្ឌ ខ (កម្រិតមូលដ្ឋាន)</option>
+                            <option value="C">ក្របខ័ណ្ឌ គ (បឋមសិក្សា)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>តួនាទី / មុខតំណែង</label>
+                        <input type="text" name="position" id="os_position" class="form-control" placeholder="ឧ. ប្រធានការិយាល័យ / អនុប្រធាន / មន្ត្រី" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ថ្នាក់/កាំប្រាក់ (Grade)</label>
+                        <input type="text" name="current_grade" id="os_current_grade" class="form-control" placeholder="ឧ. ក.១.១">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ថ្ងៃខែឆ្នាំកំណើត</label>
+                        <input type="date" name="dob" id="os_dob" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>លេខទូរស័ព្ទ</label>
+                        <input type="text" name="phone" id="os_phone" class="form-control" placeholder="ឧ. 012 333 444">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>អ៊ីមែល</label>
+                        <input type="email" name="email" id="os_email" class="form-control" placeholder="ឧ. name@edu.gov.kh">
+                    </div>
+                    <div class="form-group">
+                        <label>លេខគណនីធនាគារ (បើមាន)</label>
+                        <input type="text" name="bank_account" id="os_bank_account" class="form-control" placeholder="ឧ. 000 123 456 789">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ស្ថានភាពបំពេញការងារ</label>
+                    <select name="status" id="os_status" class="form-control">
+                        <option value="active">កំពុងបម្រើការ (Active)</option>
+                        <option value="transferred">បានផ្ទេរចេញ (Transferred)</option>
+                        <option value="retired">និវត្តន៍ (Retired)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addOfficeStaffModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកបុគ្គលិក</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function switchStaffTab(tab) {
+        const secSchool = document.getElementById('section-school-staff');
+        const secOffice = document.getElementById('section-office-staff');
+        const btnAll = document.getElementById('tab-btn-all');
+        const btnSchool = document.getElementById('tab-btn-school');
+        const btnOffice = document.getElementById('tab-btn-office');
+
+        const subSchool = document.getElementById('subnav-staff-school');
+        const subOffice = document.getElementById('subnav-staff-office');
+
+        btnAll.classList.remove('btn-primary', 'btn-secondary', 'btn-gold', 'active-tab');
+        btnSchool.classList.remove('btn-primary', 'btn-secondary', 'btn-gold', 'active-tab');
+        btnOffice.classList.remove('btn-primary', 'btn-secondary', 'btn-gold', 'active-tab');
+
+        if (subSchool) subSchool.classList.remove('active-subnav');
+        if (subOffice) subOffice.classList.remove('active-subnav');
+
+        if (tab === 'school') {
+            secSchool.style.display = 'block';
+            secOffice.style.display = 'none';
+            btnSchool.classList.add('btn-primary', 'active-tab');
+            btnAll.classList.add('btn-secondary');
+            btnOffice.classList.add('btn-secondary');
+            if (subSchool) subSchool.classList.add('active-subnav');
+        } else if (tab === 'office') {
+            secSchool.style.display = 'none';
+            secOffice.style.display = 'block';
+            btnOffice.classList.add('btn-gold', 'active-tab');
+            btnAll.classList.add('btn-secondary');
+            btnSchool.classList.add('btn-secondary');
+            if (subOffice) subOffice.classList.add('active-subnav');
+        } else {
+            // 'all'
+            secSchool.style.display = 'block';
+            secOffice.style.display = 'block';
+            btnAll.classList.add('btn-primary', 'active-tab');
+            btnSchool.classList.add('btn-secondary');
+            btnOffice.classList.add('btn-secondary');
+        }
+    }
+
+    function openAddStaffModal() {
+        document.getElementById('staffModalTitle').innerHTML = '<i class="fa-solid fa-user-plus"></i> បន្ថែមប្រវត្តិរូបគ្រូ/បុគ្គលិកអប់រំ';
+        document.getElementById('staff_id').value = '';
+        document.getElementById('staff_id_num').value = '';
+        document.getElementById('staff_name_kh').value = '';
+        document.getElementById('staff_name_en').value = '';
+        document.getElementById('staff_position').value = '';
+        document.getElementById('staff_subject_specialty').value = '';
+        document.getElementById('staff_current_grade').value = '';
+        document.getElementById('staff_phone').value = '';
+        openModal('addStaffModal');
+    }
+
+    function editStaff(staff) {
+        document.getElementById('staffModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> កែប្រែប្រវត្តិរូបគ្រូបង្រៀន';
+        document.getElementById('staff_id').value = staff.id;
+        document.getElementById('staff_id_num').value = staff.staff_id_num;
+        document.getElementById('staff_name_kh').value = staff.name_kh;
+        document.getElementById('staff_name_en').value = staff.name_en;
+        document.getElementById('staff_sex').value = staff.sex;
+        document.getElementById('staff_school_id').value = staff.school_id;
+        document.getElementById('staff_framework').value = staff.framework;
+        document.getElementById('staff_position').value = staff.position;
+        document.getElementById('staff_subject_specialty').value = staff.subject_specialty;
+        document.getElementById('staff_current_grade').value = staff.current_grade || '';
+        document.getElementById('staff_phone').value = staff.phone || '';
+        openModal('addStaffModal');
+    }
+
+    function openAddOfficeStaffModal() {
+        document.getElementById('officeStaffModalTitle').innerHTML = '<i class="fa-solid fa-user-tie"></i> បន្ថែមប្រវត្តិរូបបុគ្គលិកការិយាល័យអប់រំ';
+        document.getElementById('office_staff_id').value = '';
+        document.getElementById('os_staff_id_num').value = '';
+        document.getElementById('os_name_kh').value = '';
+        document.getElementById('os_name_en').value = '';
+        document.getElementById('os_dob').value = '';
+        document.getElementById('os_phone').value = '';
+        document.getElementById('os_email').value = '';
+        document.getElementById('os_position').value = '';
+        document.getElementById('os_current_grade').value = '';
+        document.getElementById('os_bank_account').value = '';
+        openModal('addOfficeStaffModal');
+    }
+
+    function editOfficeStaffModal(os) {
+        document.getElementById('officeStaffModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> កែប្រែប្រវត្តិរូបបុគ្គលិកការិយាល័យ';
+        document.getElementById('office_staff_id').value = os.id;
+        document.getElementById('os_staff_id_num').value = os.staff_id_num;
+        document.getElementById('os_name_kh').value = os.name_kh;
+        document.getElementById('os_name_en').value = os.name_en;
+        document.getElementById('os_sex').value = os.sex;
+        document.getElementById('os_dob').value = os.dob || '';
+        document.getElementById('os_phone').value = os.phone || '';
+        document.getElementById('os_email').value = os.email || '';
+        document.getElementById('os_office_unit').value = os.office_unit || 'ថ្នាក់ដឹកនាំការិយាល័យ';
+        document.getElementById('os_framework').value = os.framework || 'A';
+        document.getElementById('os_position').value = os.position;
+        document.getElementById('os_current_grade').value = os.current_grade || '';
+        document.getElementById('os_bank_account').value = os.bank_account || '';
+        document.getElementById('os_status').value = os.status || 'active';
+        openModal('addOfficeStaffModal');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sub = urlParams.get('sub');
+        if (sub === 'school' || sub === 'office') {
+            switchStaffTab(sub);
+        } else {
+            switchStaffTab('all');
+        }
+    });
+</script>
+{% endblock %}

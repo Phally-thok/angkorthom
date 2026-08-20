@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block header_title %}
+<i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-gold);"></i> ៩. កំណត់ត្រាសកម្មភាព (Audit Logs & Activity Records)
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-clock-rotate-left"></i> កំណត់ត្រាសកម្មភាព និងប្រវត្តិប្រតិបត្តិការក្នុងប្រព័ន្ធ
+        </div>
+        <span class="badge badge-danger"><i class="fa-solid fa-user-shield"></i> សិទ្ធិតែ Admin ប៉ុណ្ណោះ</span>
+    </div>
+    <p style="color: var(--text-muted); margin-bottom: 16px;">តាមដានរាល់សកម្មភាពនៃការ បង្កើត (CREATE), កែប្រែ (UPDATE), និងលុប (DELETE) របស់ប្រព័ន្ធគ្រប់គ្រងការិយាល័យអប់រំ យុវជន និងកីឡា ស្រុកអង្គរធំ។</p>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>ល.រ (ID)</th>
+                    <th>កាលបរិច្ឆេទ & ម៉ោង</th>
+                    <th>អ្នកប្រព្រឹត្តសកម្មភាព</th>
+                    <th>ប្រភេទសកម្មភាព</th>
+                    <th>មុខងារ/ម៉ូឌុល</th>
+                    <th>ព័ត៌មានលម្អិត</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in logs_list %}
+                <tr>
+                    <td>#{{ l.id }}</td>
+                    <td><strong>{{ l.timestamp }}</strong></td>
+                    <td><strong>{{ l.user_name }}</strong> <span style="color: var(--text-muted); font-size: 0.85em;">({{ l.username }})</span></td>
+                    <td>
+                        {% if l.action_type == 'CREATE' %}
+                        <span class="badge badge-success"><i class="fa-solid fa-plus-circle"></i> បង្កើត (CREATE)</span>
+                        {% elif l.action_type == 'UPDATE' %}
+                        <span class="badge badge-gold"><i class="fa-solid fa-pen-to-square"></i> កែប្រែ (UPDATE)</span>
+                        {% elif l.action_type == 'DELETE' %}
+                        <span class="badge badge-danger"><i class="fa-solid fa-trash"></i> លុប (DELETE)</span>
+                        {% else %}
+                        <span class="badge badge-primary"><i class="fa-solid fa-right-to-bracket"></i> ចូលប្រព័ន្ធ (LOGIN)</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge badge-gold">{{ l.module }}</span></td>
+                    <td>{{ l.details }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted);">ពុំទាន់មានកំណត់ត្រាសកម្មភាពនៅឡើយទេ</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

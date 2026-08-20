@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ប្រព័ន្ធគ្រប់គ្រង ការិយាល័យអប់រំ យុវជន និងកីឡា ស្រុកអង្គរធំ{% endblock %}</title>
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="emblem-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div class="header-titles">
+                <h1>ការិយាល័យអប់រំ យុវជន និងកីឡា</h1>
+                <p>ស្រុកអង្គរធំ • ខេត្តសៀមរាប</p>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>ផ្ទាំងព័ត៌មាន</span>
+            </a>
+
+            {% if session.get('role') in ['admin', 'user'] %}
+            <a href="{{ url_for('schools') }}" class="nav-item {% if active_page == 'schools' %}active{% endif %}">
+                <i class="fa-solid fa-school"></i>
+                <span>១. គ្រប់គ្រងសាលារៀន</span>
+            </a>
+
+            <div class="nav-group-container">
+                <a href="{{ url_for('staff') }}" class="nav-item {% if active_page == 'staff' %}active{% endif %}">
+                    <i class="fa-solid fa-user-tie"></i>
+                    <span>២. គ្រប់គ្រងបុគ្គលិក & គ្រូ</span>
+                </a>
+                <div class="sidebar-subnav">
+                    <a href="{{ url_for('staff') }}?sub=school" id="subnav-staff-school" onclick="if(typeof switchStaffTab === 'function'){ switchStaffTab('school'); return false; }" class="subnav-link {% if active_page == 'staff' and (request.args.get('sub') == 'school' or not request.args.get('sub')) %}active-subnav{% endif %}">
+                        <i class="fa-solid fa-chalkboard-user"></i> ២.១ គ្រូ & បុគ្គលិកសាលា
+                    </a>
+                    <a href="{{ url_for('staff') }}?sub=office" id="subnav-staff-office" onclick="if(typeof switchStaffTab === 'function'){ switchStaffTab('office'); return false; }" class="subnav-link {% if active_page == 'staff' and request.args.get('sub') == 'office' %}active-subnav{% endif %}">
+                        <i class="fa-solid fa-building-user"></i> ២.២ បុគ្គលិកការិយាល័យ
+                    </a>
+                </div>
+            </div>
+
+            <a href="{{ url_for('students') }}" class="nav-item {% if active_page == 'students' %}active{% endif %}">
+                <i class="fa-solid fa-user-graduate"></i>
+                <span>៣. ស្ថិតិសិស្ស & លទ្ធផលប្រឡង</span>
+            </a>
+
+            <a href="{{ url_for('youth_sports') }}" class="nav-item {% if active_page == 'youth_sports' %}active{% endif %}">
+                <i class="fa-solid fa-trophy"></i>
+                <span>៤. យុវជន & កីឡា</span>
+            </a>
+
+            <div class="nav-group-container">
+                <a href="{{ url_for('documents') }}" class="nav-item {% if active_page == 'documents' %}active{% endif %}">
+                    <i class="fa-solid fa-file-contract"></i>
+                    <span>៥. លិខិតស្នាម & បេសកកម្ម</span>
+                </a>
+                <div class="sidebar-subnav">
+                    <a href="{{ url_for('documents') }}?sub=letters" id="subnav-letters" onclick="if(typeof switchDocTab === 'function'){ switchDocTab('letters'); return false; }" class="subnav-link {% if request.args.get('sub') == 'letters' %}active-subnav{% endif %}">
+                        <i class="fa-solid fa-envelope-open-text"></i> ៥.១ លិខិតចូល-ចេញ
+                    </a>
+                    <a href="{{ url_for('documents') }}?sub=missions" id="subnav-missions" onclick="if(typeof switchDocTab === 'function'){ switchDocTab('missions'); return false; }" class="subnav-link {% if request.args.get('sub') == 'missions' %}active-subnav{% endif %}">
+                        <i class="fa-solid fa-plane-departure"></i> ៥.២.បេសកកម្ម
+                    </a>
+                </div>
+            </div>
+
+            <a href="{{ url_for('budget_assets') }}" class="nav-item {% if active_page == 'budget_assets' %}active{% endif %}">
+                <i class="fa-solid fa-coins"></i>
+                <span>៦. ថវិកា & ទ្រព្យសម្បត្តិ</span>
+            </a>
+
+            <a href="{{ url_for('reports') }}" class="nav-item {% if active_page == 'reports' %}active{% endif %}">
+                <i class="fa-solid fa-file-export"></i>
+                <span>៧. របាយការណ៍ & ទាញយក</span>
+            </a>
+            {% endif %}
+
+            {% if session.get('role') == 'admin' %}
+            <a href="{{ url_for('users') }}" class="nav-item {% if active_page == 'users' %}active{% endif %}">
+                <i class="fa-solid fa-users-gear"></i>
+                <span>៨. សិទ្ធិប្រើប្រាស់</span>
+            </a>
+            <a href="{{ url_for('logs') }}" class="nav-item {% if active_page == 'logs' %}active{% endif %}">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>៩. កំណត់ត្រាសកម្មភាព</span>
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile-badge">
+                <div class="user-avatar">
+                    {{ session.get('user_name', 'U')[0] }}
+                </div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.get('user_name', 'អ្នកប្រើប្រាស់') }}</div>
+                    <div class="user-role-tag">
+                        {% if session.get('role') == 'admin' %}អ្នកគ្រប់គ្រងប្រព័ន្ធ
+                        {% elif session.get('role') == 'user' %}អ្នកប្រើប្រាស់
+                        {% else %}ផ្សេងៗ{% endif %}
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn-logout" title="ចាកចេញ">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <div class="page-title">
+                <h2>{% block header_title %}ប្រព័ន្ធគ្រប់គ្រងការិយាល័យអប់រំ យុវជន និងកីឡា ស្រុកអង្គរធំ{% endblock %}</h2>
+            </div>
+            <div class="top-actions">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="globalSearch" placeholder="ស្វែងរកទិន្នន័យ...">
+                </div>
+                <span class="badge badge-gold">
+                    <i class="fa-solid fa-location-dot"></i> ស្រុកអង្គរធំ ខេត្តសៀមរាប
+                </span>
+            </div>
+        </header>
+
+        <!-- Flash Messages -->
+        <div class="content-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <i class="fa-solid fa-circle-check"></i> {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

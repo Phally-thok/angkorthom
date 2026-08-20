@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+
+{% block header_title %}
+<i class="fa-solid fa-user-graduate" style="color: var(--accent-gold);"></i> ៣. គ្រប់គ្រងស្ថិតិសិស្ស និងលទ្ធផលសិក្សា
+{% endblock %}
+
+{% block content %}
+<!-- Sub-navigation Level Tabs -->
+<div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+    <a href="{{ url_for('students', level='all') }}" class="btn btn-sm {% if level_filter == 'all' %}btn-primary{% else %}btn-secondary{% endif %}" style="display: flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-layer-group"></i> ទិន្នន័យរួម ({{ level_counts.all }})
+    </a>
+    <a href="{{ url_for('students', level='community_preschool') }}" class="btn btn-sm {% if level_filter == 'community_preschool' %}btn-primary{% else %}btn-secondary{% endif %}" style="display: flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-baby"></i> មត្តេយ្យសិក្សាសហគមន៍ ({{ level_counts.community_preschool }})
+    </a>
+    <a href="{{ url_for('students', level='state_preschool') }}" class="btn btn-sm {% if level_filter == 'state_preschool' %}btn-primary{% else %}btn-secondary{% endif %}" style="display: flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-shapes"></i> មត្តេយ្យសិក្សារដ្ឋ ({{ level_counts.state_preschool }})
+    </a>
+    <a href="{{ url_for('students', level='primary') }}" class="btn btn-sm {% if level_filter == 'primary' %}btn-primary{% else %}btn-secondary{% endif %}" style="display: flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-children"></i> បឋមសិក្សា ({{ level_counts.primary }})
+    </a>
+    <a href="{{ url_for('students', level='secondary') }}" class="btn btn-sm {% if level_filter == 'secondary' %}btn-primary{% else %}btn-secondary{% endif %}" style="display: flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-school"></i> អនុវិទ្យាល័យ ({{ level_counts.secondary }})
+    </a>
+    <a href="{{ url_for('students', level='high') }}" class="btn btn-sm {% if level_filter == 'high' %}btn-primary{% else %}btn-secondary{% endif %}" style="display: flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-graduation-cap"></i> វិទ្យាល័យ ({{ level_counts.high }})
+    </a>
+</div>
+
+<!-- Student Statistics Panel -->
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-users"></i> ស្ថិតិសិស្សតាមសាលានីមួយៗ
+            {% if level_filter == 'community_preschool' %}(មត្តេយ្យសិក្សាសហគមន៍)
+            {% elif level_filter == 'state_preschool' %}(មត្តេយ្យសិក្សារដ្ឋ)
+            {% elif level_filter == 'primary' %}(បឋមសិក្សា)
+            {% elif level_filter == 'secondary' %}(អនុវិទ្យាល័យ)
+            {% elif level_filter == 'high' %}(វិទ្យាល័យ)
+            {% endif %}
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ url_for('schools') }}" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-school"></i> បន្ថែមសាលា
+            </a>
+            <button class="btn btn-primary btn-sm" onclick="openModal('addStudentStatsModal')">
+                <i class="fa-solid fa-plus"></i> បញ្ជូន/កែប្រែ ស្ថិតិសិស្ស
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th rowspan="2">សាលារៀន</th>
+                    <th rowspan="2">កម្រិត</th>
+                    <th rowspan="2">ឆ្នាំសិក្សា</th>
+                    <th rowspan="2">សិស្សសរុប</th>
+                    <th rowspan="2">សិស្សស្រី</th>
+                    <th colspan="2" style="text-align: center;">ពិការភាព</th>
+                    <th colspan="2" style="text-align: center;">អាហារូបករណ៍</th>
+                    <th colspan="2" style="text-align: center;">បោះបង់</th>
+                    <th rowspan="2">ត្រួតថ្នាក់</th>
+                    <th rowspan="2">អត្រាបោះបង់ (%)</th>
+                    <th rowspan="2">សកម្មភាព</th>
+                </tr>
+                <tr>
+                    <th>សរុប</th>
+                    <th>ស្រី</th>
+                    <th>សរុប</th>
+                    <th>ស្រី</th>
+                    <th>សរុប</th>
+                    <th>ស្រី</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for st in stats_list %}
+                <tr>
+                    <td><strong>{{ st.school_name }}</strong></td>
+                    <td>
+                        {% if st.school_level == 'community_preschool' %}
+                        <span class="badge" style="background: rgba(255, 112, 166, 0.2); color: #ff70a6;">មត្តេយ្យសហគមន៍</span>
+                        {% elif st.school_level in ['state_preschool', 'preschool'] %}
+                        <span class="badge" style="background: rgba(255, 183, 178, 0.2); color: #ffb7b2;">មត្តេយ្យរដ្ឋ</span>
+                        {% elif st.school_level == 'primary' %}
+                        <span class="badge badge-success">បឋមសិក្សា</span>
+                        {% elif st.school_level == 'secondary' %}
+                        <span class="badge badge-primary">អនុវិទ្យាល័យ</span>
+                        {% elif st.school_level == 'high' %}
+                        <span class="badge badge-gold">វិទ្យាល័យ</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ st.academic_year }}</td>
+                    <td><span class="badge badge-primary">{{ st.total_students }} នាក់</span></td>
+                    <td>{{ st.female_students }} នាក់ ({{ ((st.female_students / st.total_students)*100)|round(1) if st.total_students else 0 }}%)</td>
+                    <td>{{ st.disabled_students }} នាក់</td>
+                    <td>{{ st.disabled_female or 0 }} នាក់</td>
+                    <td><span class="badge badge-gold">{{ st.scholarship_students }} នាក់</span></td>
+                    <td><span class="badge badge-gold">{{ st.scholarship_female or 0 }} នាក់</span></td>
+                    <td><span class="badge badge-danger">{{ st.dropout_count }} នាក់</span></td>
+                    <td><span class="badge badge-danger">{{ st.dropout_female or 0 }} នាក់</span></td>
+                    <td>{{ st.repetition_count }} នាក់</td>
+                    <td>
+                        {% set drop_rate = ((st.dropout_count / st.total_students)*100)|round(2) if st.total_students else 0 %}
+                        <span class="badge {% if drop_rate > 3 %}badge-danger{% else %}badge-success{% endif %}">
+                            {{ drop_rate }}%
+                        </span>
+                    </td>
+                    <td style="white-space: nowrap;">
+                        <button class="btn btn-secondary btn-sm" onclick="editStudentStats({{ st|tojson|forceescape }})">
+                            <i class="fa-solid fa-pen-to-square"></i> កែប្រែ
+                        </button>
+                        <a href="{{ url_for('students', action='delete', target='student_stats', id=st.id, level=level_filter) }}" class="btn btn-danger btn-sm" onclick="return confirm('តើអ្នកពិតជាចង់លុបទិន្នន័យស្ថិតិសិស្សនេះមែនទេ?')">
+                            <i class="fa-solid fa-trash"></i> លុប
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if level_filter in ['all', 'secondary', 'high'] %}
+<!-- Exam Results Panel -->
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-award"></i> លទ្ធផលប្រឡងឌីប្លូម និងបាក់ឌុប
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('addExamResultModal')">
+            <i class="fa-solid fa-file-circle-plus"></i> បញ្ជូនលទ្ធផលប្រឡង
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>សាលារៀន</th>
+                    <th>ឆ្នាំសិក្សា</th>
+                    <th>កម្រិតប្រឡង</th>
+                    <th>បេក្ខជនសរុប (ស្រី)</th>
+                    <th>ប្រឡងជាប់ (ស្រី)</th>
+                    <th>អត្រាជាប់ (%)</th>
+                    <th>និទ្ទេស A</th>
+                    <th>និទ្ទេស B</th>
+                    <th>និទ្ទេស C</th>
+                    <th>និទ្ទេស D</th>
+                    <th>និទ្ទេស E</th>
+                    <th>សកម្មភាព</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ex in exam_list %}
+                <tr>
+                    <td><strong>{{ ex.school_name }}</strong></td>
+                    <td>{{ ex.academic_year }}</td>
+                    <td>
+                        {% if ex.exam_type == 'bacii_grade_12' %}
+                        <span class="badge badge-gold">បាក់ឌុប (ទី១២)</span>
+                        {% else %}
+                        <span class="badge badge-primary">ឌីប្លូម (ទី៩)</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ ex.total_candidates }} នាក់ ({{ ex.female_candidates }})</td>
+                    <td><strong style="color: var(--accent-teal);">{{ ex.total_passed }} នាក់ ({{ ex.female_passed }})</strong></td>
+                    <td>
+                        {% set pass_rate = ((ex.total_passed / ex.total_candidates)*100)|round(1) if ex.total_candidates else 0 %}
+                        <span class="badge badge-success">{{ pass_rate }}%</span>
+                    </td>
+                    <td><span class="badge badge-gold">A: {{ ex.grade_a }}</span></td>
+                    <td>B: {{ ex.grade_b }}</td>
+                    <td>C: {{ ex.grade_c }}</td>
+                    <td>D: {{ ex.grade_d }}</td>
+                    <td>E: {{ ex.grade_e }}</td>
+                    <td style="white-space: nowrap;">
+                        <a href="{{ url_for('students', action='delete', target='exam_results', id=ex.id, level=level_filter) }}" class="btn btn-danger btn-sm" onclick="return confirm('តើអ្នកពិតជាចង់លុបទិន្នន័យលទ្ធផលប្រឡងនេះមែនទេ?')">
+                            <i class="fa-solid fa-trash"></i> លុប
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal Add Student Stats -->
+<div class="modal-backdrop" id="addStudentStatsModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-users"></i> បញ្ជូន/ធ្វើបច្ចុប្បន្នភាព ស្ថិតិសិស្ស</h3>
+            <button class="modal-close" onclick="closeModal('addStudentStatsModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_student_stats') }}" method="POST" id="studentStatsForm">
+            <input type="hidden" name="stat_id" id="stat_id">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>សាលារៀន</label>
+                        <select name="school_id" class="form-control" required>
+                            {% for sch in schools %}
+                            <option value="{{ sch.id }}">{{ sch.name_kh }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ឆ្នាំសិក្សា</label>
+                        <input type="text" name="academic_year" class="form-control" value="2025-2026" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ចំនួនសិស្សសរុប</label>
+                        <input type="number" name="total_students" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ចំនួនសិស្សស្រី</label>
+                        <input type="number" name="female_students" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>សិស្សពិការភាព (សរុប)</label>
+                        <input type="number" name="disabled_students" class="form-control" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>សិស្សពិការភាព (ស្រី)</label>
+                        <input type="number" name="disabled_female" class="form-control" value="0">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>សិស្សអាហារូបករណ៍ (សរុប)</label>
+                        <input type="number" name="scholarship_students" class="form-control" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>សិស្សអាហារូបករណ៍ (ស្រី)</label>
+                        <input type="number" name="scholarship_female" class="form-control" value="0">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ចំនួនសិស្សបោះបង់ (សរុប)</label>
+                        <input type="number" name="dropout_count" class="form-control" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>ចំនួនសិស្សបោះបង់ (ស្រី)</label>
+                        <input type="number" name="dropout_female" class="form-control" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ចំនួនសិស្សត្រួតថ្នាក់</label>
+                        <input type="number" name="repetition_count" class="form-control" value="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addStudentStatsModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Add Exam Result -->
+<div class="modal-backdrop" id="addExamResultModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-file-circle-plus"></i> បញ្ជូនលទ្ធផលប្រឡង</h3>
+            <button class="modal-close" onclick="closeModal('addExamResultModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_exam_result') }}" method="POST">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>សាលារៀន</label>
+                        <select name="school_id" class="form-control" required>
+                            {% for sch in schools %}
+                            <option value="{{ sch.id }}">{{ sch.name_kh }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ឆ្នាំសិក្សា</label>
+                        <input type="text" name="academic_year" class="form-control" value="2024-2025" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ប្រភេទប្រឡង</label>
+                    <select name="exam_type" class="form-control" required>
+                        <option value="diploma_grade_9">ប្រឡងឌីប្លូម (ថ្នាក់ទី៩)</option>
+                        <option value="bacii_grade_12">ប្រឡងបាក់ឌុប (ថ្នាក់ទី១២)</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>បេក្ខជនសរុប</label>
+                        <input type="number" name="total_candidates" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>បេក្ខជនស្រី</label>
+                        <input type="number" name="female_candidates" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>បេក្ខជនប្រឡងជាប់សរុប</label>
+                        <input type="number" name="total_passed" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>បេក្ខជនស្រីប្រឡងជាប់</label>
+                        <input type="number" name="female_passed" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group"><label>និទ្ទេស A</label><input type="number" name="grade_a" class="form-control" value="0"></div>
+                    <div class="form-group"><label>និទ្ទេស B</label><input type="number" name="grade_b" class="form-control" value="0"></div>
+                    <div class="form-group"><label>និទ្ទេស C</label><input type="number" name="grade_c" class="form-control" value="0"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>និទ្ទេស D</label><input type="number" name="grade_d" class="form-control" value="0"></div>
+                    <div class="form-group"><label>និទ្ទេស E</label><input type="number" name="grade_e" class="form-control" value="0"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addExamResultModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function editStudentStats(st) {
+    document.getElementById('stat_id').value = st.id || '';
+    const form = document.getElementById('studentStatsForm');
+    if (form) {
+        form.querySelector('[name="school_id"]').value = st.school_id || '';
+        form.querySelector('[name="academic_year"]').value = st.academic_year || '';
+        form.querySelector('[name="total_students"]').value = st.total_students || 0;
+        form.querySelector('[name="female_students"]').value = st.female_students || 0;
+        form.querySelector('[name="disabled_students"]').value = st.disabled_students || 0;
+        form.querySelector('[name="disabled_female"]').value = st.disabled_female || 0;
+        form.querySelector('[name="scholarship_students"]').value = st.scholarship_students || 0;
+        form.querySelector('[name="scholarship_female"]').value = st.scholarship_female || 0;
+        form.querySelector('[name="dropout_count"]').value = st.dropout_count || 0;
+        form.querySelector('[name="dropout_female"]').value = st.dropout_female || 0;
+        form.querySelector('[name="repetition_count"]').value = st.repetition_count || 0;
+    }
+    openModal('addStudentStatsModal');
+}
+</script>
+{% endblock %}
+

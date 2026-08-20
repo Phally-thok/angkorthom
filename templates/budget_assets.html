@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block header_title %}
+<i class="fa-solid fa-coins" style="color: var(--accent-gold);"></i> ៦. គ្រប់គ្រងថវិកា និងទ្រព្យសម្បត្តិរដ្ឋ (Budget & Asset Management)
+{% endblock %}
+
+{% block content %}
+<!-- Budget Section -->
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-wallet"></i> កញ្ចប់ថវិកាប្រតិបត្តិការសាលារៀន (PB / Operational Budgeting)
+        </div>
+        {% if session.get('role') in ['admin', 'chief'] %}
+        <button class="btn btn-primary" onclick="openModal('addBudgetModal')">
+            <i class="fa-solid fa-plus"></i> បន្ថែមកញ្ចប់ថវិកា
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>សាលារៀន</th>
+                    <th>ឆ្នាំសិក្សា</th>
+                    <th>ប្រភេទថវិកា</th>
+                    <th>ថវិកាទទួលបាន (រៀល)</th>
+                    <th>ថវិកាចាយរួច (រៀល)</th>
+                    <th>ថវិកានៅសល់ (រៀល)</th>
+                    <th>ការប្រើប្រាស់ (%)</th>
+                    <th>សម្គាល់</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in budget_list %}
+                <tr>
+                    <td><strong>{{ b.school_name }}</strong></td>
+                    <td>{{ b.academic_year }}</td>
+                    <td>
+                        {% if b.budget_type == 'PB_operational' %}
+                        <span class="badge badge-gold">ថវិកាប្រតិបត្តិការ (PB)</span>
+                        {% else %}
+                        <span class="badge badge-primary">ថវិកាអភិវឌ្ឍន៍សាលា</span>
+                        {% endif %}
+                    </td>
+                    <td><strong style="color: var(--accent-gold);">{{ "{:,.0f}".format(b.allocated_amount) }} ៛</strong></td>
+                    <td>{{ "{:,.0f}".format(b.spent_amount) }} ៛</td>
+                    <td><strong style="color: var(--accent-teal);">{{ "{:,.0f}".format(b.allocated_amount - b.spent_amount) }} ៛</strong></td>
+                    <td>
+                        {% set used_pct = ((b.spent_amount / b.allocated_amount)*100)|round(1) if b.allocated_amount else 0 %}
+                        <span class="badge {% if used_pct > 90 %}badge-danger{% else %}badge-success{% endif %}">
+                            {{ used_pct }}%
+                        </span>
+                    </td>
+                    <td>{{ b.notes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Assets Inventory Section -->
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-boxes-packing"></i> បញ្ជីសារពើភ័ណ្ឌគ្រឿងសង្ហារិម និងសម្ភារសិក្សា
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addAssetModal')">
+            <i class="fa-solid fa-box-archive"></i> បែងចែកសម្ភារ/ទ្រព្យសម្បត្តិ
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>សាលារៀនទទួលបាន</th>
+                    <th>ឈ្មោះសម្ភារ/ទ្រព្យសម្បត្តិ</th>
+                    <th>ប្រភេទ</th>
+                    <th>ចំនួន</th>
+                    <th>ស្ថានភាពបច្ចុប្បន្ន</th>
+                    <th>កាលបរិច្ឆេទបែងចែក</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in assets_list %}
+                <tr>
+                    <td><strong>{{ a.school_name }}</strong></td>
+                    <td>{{ a.asset_name }}</td>
+                    <td>
+                        {% if a.category == 'furniture' %}
+                        <span class="badge badge-secondary"><i class="fa-solid fa-chair"></i> គ្រឿងសង្ហារិម</span>
+                        {% elif a.category == 'computer' %}
+                        <span class="badge badge-primary"><i class="fa-solid fa-desktop"></i> កុំព្យូទ័រ/បច្ចេកវិទ្យា</span>
+                        {% elif a.category == 'textbook' %}
+                        <span class="badge badge-gold"><i class="fa-solid fa-book"></i> សៀវភៅសិក្សា</span>
+                        {% else %}
+                        <span class="badge badge-success">សម្ភារផ្សេងៗ</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ a.quantity }}</strong></td>
+                    <td>
+                        {% if a.condition == 'good' %}
+                        <span class="badge badge-success">ល្អ (Good)</span>
+                        {% elif a.condition == 'repair_needed' %}
+                        <span class="badge badge-gold">ត្រូវជួសជុល</span>
+                        {% else %}
+                        <span class="badge badge-danger">ខូច (Broken)</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ a.date_allocated }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Add Budget -->
+<div class="modal-backdrop" id="addBudgetModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-coins"></i> កត់ត្រាកញ្ចប់ថវិកាប្រតិបត្តិការសាលា</h3>
+            <button class="modal-close" onclick="closeModal('addBudgetModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_budget') }}" method="POST">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>សាលារៀន</label>
+                        <select name="school_id" class="form-control" required>
+                            {% for sch in schools %}
+                            <option value="{{ sch.id }}">{{ sch.name_kh }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ឆ្នាំសិក្សា</label>
+                        <input type="text" name="academic_year" class="form-control" value="2025-2026" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ប្រភេទថវិកា</label>
+                    <select name="budget_type" class="form-control" required>
+                        <option value="PB_operational">កញ្ចប់ថវិកាប្រតិបត្តិការសាលា (PB)</option>
+                        <option value="school_development">ថវិកាអភិវឌ្ឍន៍សាលា</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ថវិកាទទួលបាន (រៀល)</label>
+                        <input type="number" name="allocated_amount" class="form-control" placeholder="ឧ. 25000000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ថវិកាចាយរួច (រៀល)</label>
+                        <input type="number" name="spent_amount" class="form-control" value="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ចំណាយ/សម្គាល់</label>
+                    <input type="text" name="notes" class="form-control" placeholder="ឧ. ថវិកាប្រតិបត្តិការដើមឆ្នាំ">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addBudgetModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Add Asset -->
+<div class="modal-backdrop" id="addAssetModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-box-archive"></i> បែងចែកសម្ភារ/ទ្រព្យសម្បត្តិ</h3>
+            <button class="modal-close" onclick="closeModal('addAssetModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_asset') }}" method="POST">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>សាលារៀនទទួលបាន</label>
+                        <select name="school_id" class="form-control" required>
+                            {% for sch in schools %}
+                            <option value="{{ sch.id }}">{{ sch.name_kh }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ប្រភេទសម្ភារ</label>
+                        <select name="category" class="form-control" required>
+                            <option value="furniture">គ្រឿងសង្ហារិម (តុ, កៅអី...)</option>
+                            <option value="computer">កុំព្យូទ័រ/បច្ចេកវិទ្យា</option>
+                            <option value="textbook">សៀវភៅសិក្សាមូលដ្ឋាន</option>
+                            <option value="equipment">សម្ភារពិសោធន៍/ផ្សេងៗ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ឈ្មោះសម្ភារ/ទ្រព្យសម្បត្តិ</label>
+                    <input type="text" name="asset_name" class="form-control" placeholder="ឧ. តុ និងកៅអីសិស្ស" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ចំនួន (Quantity)</label>
+                        <input type="number" name="quantity" class="form-control" value="50" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ស្ថានភាព</label>
+                        <select name="condition" class="form-control" required>
+                            <option value="good">ល្អ (Good)</option>
+                            <option value="repair_needed">ត្រូវជួសជុល</option>
+                            <option value="broken">ខូច (Broken)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>កាលបរិច្ឆេទបែងចែក</label>
+                    <input type="date" name="date_allocated" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addAssetModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

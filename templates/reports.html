@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block header_title %}
+<i class="fa-solid fa-file-export" style="color: var(--accent-gold);"></i> ៧. របាយការណ៍ និងផ្ទាំងព័ត៌មាន (Reports & Dashboard Export)
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fa-solid fa-print"></i> ទាញយករបាយការណ៍ផ្លូវការ ផ្ញើជូនមន្ទីរអប់រំ យុវជន និងកីឡា ខេត្តសៀមរាប
+        </div>
+    </div>
+
+    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 24px;">
+        លោកអ្នកអាចជ្រើសរើសប្រភេទរបាយការណ៍ និងទាញយកជាទម្រង់ <strong>Excel (.xlsx)</strong> ឬ <strong>PDF Report</strong> ដើម្បីភ្ជាប់ផ្ញើជូនថ្នាក់ដឹកនាំ ឬមន្ទីរអប់រំខេត្ត។
+    </p>
+
+    <div class="grid-3">
+        <!-- School & Staff Report -->
+        <div class="metric-card" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="metric-icon gold"><i class="fa-solid fa-school"></i></div>
+                <div>
+                    <strong style="color: #fff; font-size: 15px;">របាយការណ៍សាលារៀន & គ្រូ</strong>
+                    <div style="font-size: 12px; color: var(--text-muted);">ស្ថិតិសាលា, គ្រូបង្រៀន, ក្របខ័ណ្ឌ</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; width: 100%; margin-top: 10px;">
+                <a href="{{ url_for('export_excel', report_type='schools_staff') }}" class="btn btn-success btn-sm" style="flex: 1; justify-content: center;">
+                    <i class="fa-solid fa-file-excel"></i> Excel (.xlsx)
+                </a>
+                <a href="{{ url_for('export_pdf', report_type='schools_staff') }}" target="_blank" class="btn btn-danger btn-sm" style="flex: 1; justify-content: center;">
+                    <i class="fa-solid fa-file-pdf"></i> PDF Report
+                </a>
+            </div>
+        </div>
+
+        <!-- Student & Exam Report -->
+        <div class="metric-card" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="metric-icon blue"><i class="fa-solid fa-user-graduate"></i></div>
+                <div>
+                    <strong style="color: #fff; font-size: 15px;">របាយការណ៍ស្ថិតិសិស្ស & ប្រឡង</strong>
+                    <div style="font-size: 12px; color: var(--text-muted);">សិស្សសរុប, ស្រី, បាក់ឌុប/ឌីប្លូម</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; width: 100%; margin-top: 10px;">
+                <a href="{{ url_for('export_excel', report_type='students_exam') }}" class="btn btn-success btn-sm" style="flex: 1; justify-content: center;">
+                    <i class="fa-solid fa-file-excel"></i> Excel (.xlsx)
+                </a>
+                <a href="{{ url_for('export_pdf', report_type='students_exam') }}" target="_blank" class="btn btn-danger btn-sm" style="flex: 1; justify-content: center;">
+                    <i class="fa-solid fa-file-pdf"></i> PDF Report
+                </a>
+            </div>
+        </div>
+
+        <!-- Budget & Assets Report -->
+        <div class="metric-card" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="metric-icon teal"><i class="fa-solid fa-coins"></i></div>
+                <div>
+                    <strong style="color: #fff; font-size: 15px;">របាយការណ៍ថវិកា PB & ទ្រព្យសម្បត្តិ</strong>
+                    <div style="font-size: 12px; color: var(--text-muted);">កញ្ចប់ថវិកា, តុ, កៅអី, កុំព្យូទ័រ</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; width: 100%; margin-top: 10px;">
+                <a href="{{ url_for('export_excel', report_type='budget_assets') }}" class="btn btn-success btn-sm" style="flex: 1; justify-content: center;">
+                    <i class="fa-solid fa-file-excel"></i> Excel (.xlsx)
+                </a>
+                <a href="{{ url_for('export_pdf', report_type='budget_assets') }}" target="_blank" class="btn btn-danger btn-sm" style="flex: 1; justify-content: center;">
+                    <i class="fa-solid fa-file-pdf"></i> PDF Report
+                </a>
+            </div>
+        </div>
+
+        <!-- Mission Expense Report Card -->
+        <div class="metric-card" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="metric-icon gold"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                <div>
+                    <strong style="color: #fff; font-size: 15px;">របាយការណ៍ចំណាយប្រាក់បេសកកម្ម</strong>
+                    <div style="font-size: 12px; color: var(--text-muted);">ប្រាក់ឧបត្ថម្ភមន្ត្រីចុះបេសកកម្ម</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; width: 100%; margin-top: 10px;">
+                <a href="{{ url_for('export_excel', report_type='mission_expenses') }}" class="btn btn-success btn-sm" style="flex: 1; justify-content: center;">
+                    <i class="fa-solid fa-file-excel"></i> Excel (.xlsx)
+                </a>
+                <a href="{{ url_for('mission_expense_report') }}" class="btn btn-primary btn-sm" style="flex: 1; justify-content: center;">
+                    <i class="fa-solid fa-print"></i> មើល & បោះពុម្ព
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Printable Preview Report Card -->
+<div class="panel" style="background: #fff; color: #000; padding: 30px; font-family: 'Kantumruy Pro'; border-radius: var(--radius-md);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px;">
+        <div>
+            <h3 style="font-size: 18px; font-weight: 700; color: #000;">ការិយាល័យអប់រំ យុវជន និងកីឡា ស្រុកអង្គរធំ</h3>
+            <p style="font-size: 13px; color: #333;">មន្ទីរអប់រំ យុវជន និងកីឡា ខេត្តសៀមរាប</p>
+        </div>
+        <div style="text-align: right;">
+            <span class="badge badge-gold" style="font-size: 12px;">របាយការណ៍សង្ខេបប្រចាំឆ្នាំ២០២៦</span>
+        </div>
+    </div>
+
+    <h4 style="text-align: center; margin: 20px 0; font-size: 16px; font-weight: 700;">សង្ខេបទិន្នន័យអប់រំ ស្រុកអង្គរធំ (Summary Overview)</h4>
+
+    <table class="custom-table" style="color: #000; border: 1px solid #ccc; margin-bottom: 20px;">
+        <thead>
+            <tr style="background: #f0f4f8; color: #000;">
+                <th style="color: #000;">សាលារៀនសរុប</th>
+                <th style="color: #000;">គ្រូបង្រៀនសរុប</th>
+                <th style="color: #000;">សិស្សសរុប (ស្រី)</th>
+                <th style="color: #000;">អត្រាប្រឡងបាក់ឌុបជាប់</th>
+                <th style="color: #000;">ថវិកា PB សរុប</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>៧ សាលា</strong></td>
+                <td><strong>១០ នាក់</strong></td>
+                <td><strong>៣,១៨០ នាក់ (១,៦២០)</strong></td>
+                <td><strong style="color: green;">៨៤.៤%</strong></td>
+                <td><strong>១៤៤,០០០,០០០ ៛</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 30px; font-size: 12px;">
+        <div>
+            <div>បានពិនិត្យ និងផ្ទៀងផ្ទាត់ដោយ៖</div>
+            <div style="margin-top: 40px; font-weight: 700;">មន្ត្រីព័ត៌មានវិទ្យាការិយាល័យ</div>
+        </div>
+        <div style="text-align: center;">
+            <div>ធ្វើនៅ ស្រុកអង្គរធំ, ថ្ងៃទី១៥ ខែសីហា ឆ្នាំ២០២៦</div>
+            <div style="margin-top: 40px; font-weight: 700;">ប្រធានការិយាល័យអប់រំ យុវជន និងកីឡា</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
