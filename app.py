@@ -1093,18 +1093,47 @@ def get_officer_summary(missions):
                     'position': meta.get('position', 'មន្ត្រី'),
                     'trip_count': 0,
                     'school_trips': 0,
+                    'school_amount': 0.0,
                     'cross_district_trips': 0,
+                    'cross_district_amount': 0.0,
                     'rate_per_trip': cost_per_person,
                     'total_amount': 0.0,
-                    'remarks': ''
+                    'remarks': '',
+                    'school_missions': [],
+                    'cross_district_missions': []
                 }
 
             officer_map[clean_name]['trip_count'] += 1
-            if m_type == 'cross_district':
-                officer_map[clean_name]['cross_district_trips'] = officer_map[clean_name].get('cross_district_trips', 0) + 1
-            else:
-                officer_map[clean_name]['school_trips'] = officer_map[clean_name].get('school_trips', 0) + 1
             officer_map[clean_name]['total_amount'] += cost_per_person
+
+            if m_type == 'cross_district':
+                officer_map[clean_name]['cross_district_trips'] += 1
+                officer_map[clean_name]['cross_district_amount'] += cost_per_person
+                officer_map[clean_name]['cross_district_missions'].append({
+                    'mission_code': m.get('mission_code', ''),
+                    'title': m.get('title', ''),
+                    'destination': m.get('destination_schools', ''),
+                    'start_date': m.get('start_date', ''),
+                    'end_date': m.get('end_date', ''),
+                    'days_count': m.get('days_count', 1),
+                    'nights_count': m.get('nights_count', 0),
+                    'travel_cost': m.get('travel_cost', 0),
+                    'pocket_total': m.get('pocket_total', 0),
+                    'food_total': m.get('food_total', 0),
+                    'hotel_total': m.get('hotel_total', 0),
+                    'total_cost': cost_per_person
+                })
+            else:
+                officer_map[clean_name]['school_trips'] += 1
+                officer_map[clean_name]['school_amount'] += cost_per_person
+                officer_map[clean_name]['school_missions'].append({
+                    'mission_code': m.get('mission_code', ''),
+                    'title': m.get('title', ''),
+                    'destination': m.get('destination_schools', ''),
+                    'start_date': m.get('start_date', ''),
+                    'end_date': m.get('end_date', ''),
+                    'allowance': cost_per_person
+                })
 
     # Format remarks for officers who have cross-district trips or both
     for o in officer_map.values():
@@ -1116,8 +1145,20 @@ def get_officer_summary(missions):
     summary_list = list(officer_map.values())
     total_summary_trips = sum(o['trip_count'] for o in summary_list)
     total_summary_amount = sum(o['total_amount'] for o in summary_list)
+    total_school_trips = sum(o['school_trips'] for o in summary_list)
+    total_school_amount = sum(o['school_amount'] for o in summary_list)
+    total_cross_trips = sum(o['cross_district_trips'] for o in summary_list)
+    total_cross_amount = sum(o['cross_district_amount'] for o in summary_list)
 
-    return summary_list, total_summary_trips, total_summary_amount
+    return (
+        summary_list,
+        total_summary_trips,
+        total_summary_amount,
+        total_school_trips,
+        total_school_amount,
+        total_cross_trips,
+        total_cross_amount
+    )
 
 def format_khmer_date(date_str):
     if not date_str:
@@ -1246,8 +1287,16 @@ def mission_expense_report():
     total_allowance = sum(g['subtotal'] for g in mission_groups)
     total_allowance_words = number_to_khmer_words(total_allowance)
 
-    # Payroll takes from BOTH School visit missions and Cross-district missions
-    officer_summary, total_summary_trips, total_summary_amount = get_officer_summary(missions)
+    # Payroll & Audit take from BOTH School visit missions and Cross-district missions
+    (
+        officer_summary,
+        total_summary_trips,
+        total_summary_amount,
+        total_school_trips,
+        total_school_amount,
+        total_cross_trips,
+        total_cross_amount
+    ) = get_officer_summary(missions)
     total_summary_amount_words = number_to_khmer_words(total_summary_amount)
 
     start_date_display = start_date if start_date else '១៧/០៤/២០២៦'
@@ -1266,6 +1315,10 @@ def mission_expense_report():
         total_summary_trips=total_summary_trips,
         total_summary_amount=total_summary_amount,
         total_summary_amount_words=total_summary_amount_words,
+        total_school_trips=total_school_trips,
+        total_school_amount=total_school_amount,
+        total_cross_trips=total_cross_trips,
+        total_cross_amount=total_cross_amount,
         start_date=start_date,
         end_date=end_date,
         start_date_display=start_date_display,
@@ -1403,9 +1456,25 @@ def export_excel(report_type):
         elif report_type == 'officer_summary':
             ws.append(["ល.រ", "អត្តលេខ", "គោត្តនាម និង នាម", "ឈ្មោះជាឡាតាំង", "លេខគណនី", "ចំនួនបានចុះ (លើក)", "ចំនួនថវិកាសរុប (៛)", "ផ្សេងៗ"])
             missions = conn.execute('SELECT * FROM mission_orders ORDER BY start_date ASC').fetchall()
-            summary_list, _, _ = get_officer_summary(missions)
+            summary_list = get_officer_summary(missions)[0]
             for idx, o in enumerate(summary_list, 1):
                 ws.append([idx, o['staff_id_num'], o['name'], o['name_en'], o['bank_account'], o['trip_count'], o['total_amount'], o.get('remarks', '')])
+        elif report_type == 'officer_audit':
+            ws.append([
+                "ល.រ", "អត្តលេខ", "គោត្តនាម និង នាម", "ភេទ", "តួនាទី",
+                "ចំនួនដងចុះសាលារៀន", "ទឹកប្រាក់ចុះសាលា (៛)",
+                "ចំនួនដងឆ្លងស្រុក", "ទឹកប្រាក់ឆ្លងស្រុក (៛)",
+                "ចំនួនដងសរុប", "ទឹកប្រាក់សរុប (៛)"
+            ])
+            missions = conn.execute('SELECT * FROM mission_orders ORDER BY start_date ASC').fetchall()
+            summary_list = get_officer_summary(missions)[0]
+            for idx, o in enumerate(summary_list, 1):
+                ws.append([
+                    idx, o['staff_id_num'], o['name'], o['sex'], o['position'],
+                    o['school_trips'], o['school_amount'],
+                    o['cross_district_trips'], o['cross_district_amount'],
+                    o['trip_count'], o['total_amount']
+                ])
         else:
             ws.append(["សាលារៀន", "ឆ្នាំសិក្សា", "ប្រភេទថវិកា", "ថវិកាទទួលបាន", "ថវិកាចាយរួច"])
             rows = conn.execute('''
