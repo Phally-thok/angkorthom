@@ -42,14 +42,14 @@
 
     <!-- Navigation Tabs for Separate Reports -->
     <div style="display: flex; gap: 10px; margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 14px; flex-wrap: nowrap; overflow-x: auto; white-space: nowrap;">
-        <button id="tab-itemized" class="btn btn-gold" onclick="switchReportTab('itemized')" style="white-space: nowrap;">
+        <button id="tab-cross-district" class="btn btn-gold" onclick="switchReportTab('cross_district')" style="white-space: nowrap;">
+            <i class="fa-solid fa-car-side"></i> របាយការណ៍បេសកកម្មឆ្លងស្រុក
+        </button>
+        <button id="tab-itemized" class="btn btn-secondary" onclick="switchReportTab('itemized')" style="white-space: nowrap;">
             <i class="fa-solid fa-list-check"></i> ១. របាយការណ៍ចំណាយប្រាក់បេសកកម្ម (លម្អិត)
         </button>
         <button id="tab-summary" class="btn btn-secondary" onclick="switchReportTab('summary')" style="white-space: nowrap;">
             <i class="fa-solid fa-users-rectangle"></i> ២. របាយការណ៍ចំណាយបេសកកម្មរបស់មន្ត្រីម្នាក់ៗ
-        </button>
-        <button id="tab-cross-district" class="btn btn-secondary" onclick="switchReportTab('cross_district')" style="white-space: nowrap;">
-            <i class="fa-solid fa-car-side"></i> ៣. របាយការណ៍បេសកកម្មឆ្លងស្រុក (តារាងផ្លូវការ)
         </button>
     </div>
 </div>
@@ -57,7 +57,7 @@
 <!-- ============================================================================== -->
 <!-- REPORT VIEW 1: DETAILED ITEMIZED MISSION EXPENSE REPORT (របាយការណ៍លម្អិត) -->
 <!-- ============================================================================== -->
-<div id="report-view-itemized" class="report-paper active-print">
+<div id="report-view-itemized" class="report-paper" style="display: none;">
     <!-- Header Section -->
     <div class="report-header">
         <div class="header-left">
@@ -285,7 +285,7 @@
 <!-- ============================================================================== -->
 <!-- REPORT VIEW 3: CROSS-DISTRICT MISSION EXPENSE REPORT (របាយការណ៍បេសកកម្មឆ្លងស្រុក) -->
 <!-- ============================================================================== -->
-<div id="report-view-cross-district" class="report-paper" style="display: none; font-size: 11.5px;">
+<div id="report-view-cross-district" class="report-paper active-print" style="font-size: 11.5px;">
     <!-- Header Section -->
     <div class="report-header">
         <div class="header-left">
@@ -565,15 +565,23 @@ function switchReportTab(tabName) {
         if (viewSummary) { viewSummary.style.display = 'block'; viewSummary.classList.add('active-print'); }
         if (tabSummary) tabSummary.className = 'btn btn-gold';
         if (excelBtn) excelBtn.href = "{{ url_for('export_excel', report_type='officer_summary') }}";
-    } else if (tabName === 'cross_district') {
-        if (viewCrossDistrict) { viewCrossDistrict.style.display = 'block'; viewCrossDistrict.classList.add('active-print'); }
-        if (tabCrossDistrict) tabCrossDistrict.className = 'btn btn-gold';
-        if (excelBtn) excelBtn.href = "{{ url_for('export_excel', report_type='mission_expenses') }}";
-    } else {
+    } else if (tabName === 'itemized') {
         if (viewItemized) { viewItemized.style.display = 'block'; viewItemized.classList.add('active-print'); }
         if (tabItemized) tabItemized.className = 'btn btn-gold';
         if (excelBtn) excelBtn.href = "{{ url_for('export_excel', report_type='mission_expenses') }}";
+    } else {
+        if (viewCrossDistrict) { viewCrossDistrict.style.display = 'block'; viewCrossDistrict.classList.add('active-print'); }
+        if (tabCrossDistrict) tabCrossDistrict.className = 'btn btn-gold';
+        if (excelBtn) excelBtn.href = "{{ url_for('export_excel', report_type='mission_expenses') }}";
     }
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+        switchReportTab(tabParam);
+    }
+});
 </script>
 {% endblock %}
