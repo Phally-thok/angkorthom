@@ -34,11 +34,8 @@
             <button id="btn-pdf-export" type="button" class="btn btn-danger btn-sm" onclick="downloadPDF()" style="white-space: nowrap;" title="ទាញយករបាយការណ៍បច្ចុប្បន្នជា PDF">
                 <i class="fa-solid fa-file-pdf"></i> ទាញយកជា PDF
             </button>
-            <button type="button" class="btn btn-primary btn-sm" onclick="printAllReports()" style="white-space: nowrap;" title="បោះពុម្ពរបាយការណ៍ទាំង៤ទាំងអស់ (ឬ Save as PDF)">
-                <i class="fa-solid fa-print"></i> បោះពុម្ពទាំងអស់
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="printCurrentReport()" style="white-space: nowrap;" title="បោះពុម្ពតែទំព័រដែលកំពុងមើល">
-                <i class="fa-solid fa-file-lines"></i> បោះពុម្ពទំព័រនេះ
+            <button type="button" class="btn btn-primary btn-sm" onclick="printCurrentReport()" style="white-space: nowrap;" title="បោះពុម្ពរបាយការណ៍">
+                <i class="fa-solid fa-print"></i> បោះពុម្ពរបាយការណ៍
             </button>
             <a href="{{ url_for('documents', sub='missions') }}" class="btn btn-secondary btn-sm" style="white-space: nowrap;">
                 <i class="fa-solid fa-arrow-left"></i> ត្រឡប់ក្រោយ
