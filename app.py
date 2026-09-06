@@ -1055,12 +1055,20 @@ def get_officer_summary(missions):
     }
 
     for m in missions:
+        m_type = m.get('mission_type') or 'local'
         raw_names = m.get('officer_names', '')
         name_list = [n.strip() for n in raw_names.replace(',', '\n').split('\n') if n.strip()]
         if not name_list:
             name_list = [raw_names.strip()]
 
-        allowance = float(m.get('allowance_amount') or 40000.0)
+        if m_type == 'cross_district':
+            cost_per_person = float(m.get('total_cost') or 0.0)
+            if cost_per_person == 0.0:
+                cost_per_person = float(m.get('pocket_total') or 0.0) + float(m.get('food_total') or 0.0) + float(m.get('hotel_total') or 0.0) + float(m.get('travel_cost') or 0.0)
+            if cost_per_person == 0.0:
+                cost_per_person = float(m.get('allowance_amount') or 40000.0)
+        else:
+            cost_per_person = float(m.get('allowance_amount') or 40000.0)
 
         for name in name_list:
             clean_name = re.sub(r'^[០-៩0-9\.\s\-—]+', '', name).strip()
@@ -1084,12 +1092,26 @@ def get_officer_summary(missions):
                     'sex': meta.get('sex', 'ប្រុស'),
                     'position': meta.get('position', 'មន្ត្រី'),
                     'trip_count': 0,
-                    'rate_per_trip': allowance,
-                    'total_amount': 0.0
+                    'school_trips': 0,
+                    'cross_district_trips': 0,
+                    'rate_per_trip': cost_per_person,
+                    'total_amount': 0.0,
+                    'remarks': ''
                 }
 
             officer_map[clean_name]['trip_count'] += 1
-            officer_map[clean_name]['total_amount'] += allowance
+            if m_type == 'cross_district':
+                officer_map[clean_name]['cross_district_trips'] = officer_map[clean_name].get('cross_district_trips', 0) + 1
+            else:
+                officer_map[clean_name]['school_trips'] = officer_map[clean_name].get('school_trips', 0) + 1
+            officer_map[clean_name]['total_amount'] += cost_per_person
+
+    # Format remarks for officers who have cross-district trips or both
+    for o in officer_map.values():
+        if o.get('cross_district_trips', 0) > 0 and o.get('school_trips', 0) > 0:
+            o['remarks'] = f"ចុះសាលា {o['school_trips']} លើក, ឆ្លងស្រុក {o['cross_district_trips']} លើក"
+        elif o.get('cross_district_trips', 0) > 0:
+            o['remarks'] = f"ឆ្លងស្រុក {o['cross_district_trips']} លើក"
 
     summary_list = list(officer_map.values())
     total_summary_trips = sum(o['trip_count'] for o in summary_list)
@@ -1224,7 +1246,8 @@ def mission_expense_report():
     total_allowance = sum(g['subtotal'] for g in mission_groups)
     total_allowance_words = number_to_khmer_words(total_allowance)
 
-    officer_summary, total_summary_trips, total_summary_amount = get_officer_summary(local_missions)
+    # Payroll takes from BOTH School visit missions and Cross-district missions
+    officer_summary, total_summary_trips, total_summary_amount = get_officer_summary(missions)
     total_summary_amount_words = number_to_khmer_words(total_summary_amount)
 
     start_date_display = start_date if start_date else '១៧/០៤/២០២៦'
@@ -1378,11 +1401,11 @@ def export_excel(report_type):
                     ])
                     cd_idx += 1
         elif report_type == 'officer_summary':
-            ws.append(["ល.រ", "គោត្តនាម និង នាម", "ភេទ", "តួនាទី", "ចំនួនបានចុះ (លើក)", "ចំនួនថវិកា ១ លើក (៛)", "ចំនួនថវិកាសរុប (៛)"])
-            missions = conn.execute('SELECT * FROM mission_orders WHERE COALESCE(mission_type, "local") != "cross_district" ORDER BY start_date ASC').fetchall()
+            ws.append(["ល.រ", "អត្តលេខ", "គោត្តនាម និង នាម", "ឈ្មោះជាឡាតាំង", "លេខគណនី", "ចំនួនបានចុះ (លើក)", "ចំនួនថវិកាសរុប (៛)", "ផ្សេងៗ"])
+            missions = conn.execute('SELECT * FROM mission_orders ORDER BY start_date ASC').fetchall()
             summary_list, _, _ = get_officer_summary(missions)
             for idx, o in enumerate(summary_list, 1):
-                ws.append([idx, o['name'], o['sex'], o['position'], o['trip_count'], o['rate_per_trip'], o['total_amount']])
+                ws.append([idx, o['staff_id_num'], o['name'], o['name_en'], o['bank_account'], o['trip_count'], o['total_amount'], o.get('remarks', '')])
         else:
             ws.append(["សាលារៀន", "ឆ្នាំសិក្សា", "ប្រភេទថវិកា", "ថវិកាទទួលបាន", "ថវិកាចាយរួច"])
             rows = conn.execute('''
