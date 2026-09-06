@@ -79,10 +79,10 @@ def dashboard():
     staff_b = conn.execute('SELECT COUNT(*) FROM staff WHERE framework = "B"').fetchone()[0]
     staff_c = conn.execute('SELECT COUNT(*) FROM staff WHERE framework = "C"').fetchone()[0]
 
-    # Fetch distinct academic years
-    years_rows = conn.execute('SELECT DISTINCT academic_year FROM student_stats ORDER BY academic_year ASC').fetchall()
-    academic_years = [r[0] for r in years_rows]
-    latest_year = academic_years[-1] if academic_years else '2025-2026'
+    # Fetch distinct academic years ordered DESCENDING (newest year at top)
+    years_rows = conn.execute('SELECT DISTINCT academic_year FROM student_stats ORDER BY academic_year DESC').fetchall()
+    academic_years = [r[0] for r in years_rows if r[0]]
+    latest_year = academic_years[0] if academic_years else '2025-2026'
 
     student_sum = conn.execute('''
         SELECT SUM(total_students), SUM(female_students) FROM student_stats WHERE academic_year = ?
@@ -152,6 +152,22 @@ def dashboard():
         'high': conn.execute("SELECT COUNT(*) FROM schools WHERE level = 'high'").fetchone()[0],
     }
 
+    # Exam Chart Data by Academic Year
+    exam_rows = conn.execute('''
+        SELECT academic_year,
+               SUM(grade_a) as a, SUM(grade_b) as b, SUM(grade_c) as c, SUM(grade_d) as d, SUM(grade_e) as e
+        FROM exam_results
+        GROUP BY academic_year
+    ''').fetchall()
+
+    exam_chart_by_year = {}
+    for yr in academic_years:
+        match = next((r for r in exam_rows if r['academic_year'] == yr), None)
+        if match and (match['a'] or match['b'] or match['c'] or match['d'] or match['e']):
+            exam_chart_by_year[yr] = [match['a'] or 0, match['b'] or 0, match['c'] or 0, match['d'] or 0, match['e'] or 0]
+        else:
+            exam_chart_by_year[yr] = [0, 0, 0, 0, 0]
+
     conn.close()
 
     stats = {
@@ -175,18 +191,87 @@ def dashboard():
         state_preschool_chart=state_preschool_chart,
         primary_chart=primary_chart,
         secondary_chart=secondary_chart,
-        high_chart=high_chart
+        high_chart=high_chart,
+        academic_years=academic_years,
+        exam_chart_by_year=exam_chart_by_year
     )
+
+@app.route('/academic_year/add', methods=['POST'])
+@login_required
+@role_required('admin', 'user')
+def add_academic_year():
+    academic_year = request.form.get('academic_year')
+    copy_previous = request.form.get('copy_previous', '1')
+
+    if not academic_year:
+        flash('សូមបញ្ចូលឆ្នាំសិក្សា!', 'danger')
+        return redirect(url_for('dashboard'))
+
+    academic_year = academic_year.strip()
+    conn = get_db_connection()
+
+    existing = conn.execute('SELECT COUNT(*) FROM student_stats WHERE academic_year = ?', (academic_year,)).fetchone()[0]
+    if existing > 0:
+        flash(f'ឆ្នាំសិក្សា {academic_year} មាននៅក្នុងប្រព័ន្ធរួចហើយ!', 'warning')
+        conn.close()
+        return redirect(url_for('dashboard'))
+
+    schools = conn.execute('SELECT id FROM schools').fetchall()
+    for sch in schools:
+        school_id = sch['id']
+        prev_stat = None
+        if copy_previous == '1':
+            prev_stat = conn.execute('SELECT * FROM student_stats WHERE school_id = ? ORDER BY id DESC LIMIT 1', (school_id,)).fetchone()
+        
+        if prev_stat:
+            conn.execute('''
+                INSERT INTO student_stats (school_id, academic_year, total_students, female_students, disabled_students, disabled_female, scholarship_students, scholarship_female, dropout_count, dropout_female, repetition_count)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (school_id, academic_year, prev_stat['total_students'], prev_stat['female_students'], prev_stat['disabled_students'], prev_stat['disabled_female'], prev_stat['scholarship_students'], prev_stat['scholarship_female'], prev_stat['dropout_count'], prev_stat['dropout_female'], prev_stat['repetition_count']))
+        else:
+            conn.execute('''
+                INSERT INTO student_stats (school_id, academic_year, total_students, female_students)
+                VALUES (?, ?, 0, 0)
+            ''', (school_id, academic_year))
+
+    conn.commit()
+    conn.close()
+    flash(f'បានបន្ថែមឆ្នាំសិក្សា {academic_year} ចូលក្នុងប្រព័ន្ធដោយជោគជ័យ!', 'success')
+    return redirect(url_for('dashboard'))
 
 # --- MODULE 1: SCHOOL MANAGEMENT ---
 @app.route('/schools')
 @login_required
 @role_required('admin', 'user')
 def schools():
+    action = request.args.get('action')
+    level_filter = request.args.get('level', 'all')
+    if action == 'delete':
+        target = request.args.get('target')
+        item_id = request.args.get('id')
+        if item_id and target == 'school':
+            conn = get_db_connection()
+            conn.execute('DELETE FROM schools WHERE id = ?', (item_id,))
+            conn.commit()
+            conn.close()
+            flash('បានលុបទិន្នន័យសាលារៀនដោយជោគជ័យ!', 'success')
+            if level_filter and level_filter != 'all':
+                return redirect(url_for('schools', level=level_filter))
+            return redirect(url_for('schools'))
+
     conn = get_db_connection()
     schools_list = conn.execute('SELECT * FROM schools ORDER BY level DESC, code ASC').fetchall()
+    
+    level_counts = {
+        'all': len(schools_list),
+        'community_preschool': conn.execute("SELECT COUNT(*) FROM schools WHERE level = 'community_preschool'").fetchone()[0],
+        'state_preschool': conn.execute("SELECT COUNT(*) FROM schools WHERE level IN ('state_preschool', 'preschool')").fetchone()[0],
+        'primary': conn.execute("SELECT COUNT(*) FROM schools WHERE level = 'primary'").fetchone()[0],
+        'secondary': conn.execute("SELECT COUNT(*) FROM schools WHERE level = 'secondary'").fetchone()[0],
+        'high': conn.execute("SELECT COUNT(*) FROM schools WHERE level = 'high'").fetchone()[0],
+    }
     conn.close()
-    return render_template('schools.html', active_page='schools', schools=schools_list)
+    return render_template('schools.html', active_page='schools', schools=schools_list, level_counts=level_counts, level_filter=level_filter)
 
 @app.route('/schools/add', methods=['POST'])
 @login_required
@@ -220,7 +305,7 @@ def add_school():
 
     conn.commit()
     conn.close()
-    return redirect(url_for('schools'))
+    return redirect(url_for('schools', level=level))
 
 # --- MODULE 2: STAFF & TEACHER MANAGEMENT ---
 @app.route('/staff')
@@ -468,6 +553,8 @@ def students():
         'high': conn.execute("SELECT COUNT(*) FROM student_stats st JOIN schools sc ON st.school_id = sc.id WHERE sc.level = 'high'").fetchone()[0],
     }
 
+    academic_years = [r[0] for r in conn.execute('SELECT DISTINCT academic_year FROM student_stats ORDER BY academic_year DESC').fetchall() if r[0]]
+
     conn.close()
 
     return render_template(
@@ -477,7 +564,8 @@ def students():
         exam_list=exam_list,
         schools=schools_list,
         level_filter=level_filter,
-        level_counts=level_counts
+        level_counts=level_counts,
+        academic_years=academic_years
     )
 
 @app.route('/students/add_stats', methods=['POST'])
@@ -602,6 +690,7 @@ def add_youth_club():
 @app.route('/documents')
 @login_required
 def documents():
+    sub = request.args.get('sub')
     action = request.args.get('action')
     if action == 'delete':
         target = request.args.get('target')
@@ -611,11 +700,15 @@ def documents():
             if target == 'document':
                 conn.execute('DELETE FROM documents WHERE id = ?', (item_id,))
                 flash('បានលុបលិខិតផ្លូវការដោយជោគជ័យ!', 'success')
+                sub = sub or 'letters'
             elif target == 'mission':
                 conn.execute('DELETE FROM mission_orders WHERE id = ?', (item_id,))
                 flash('បានលុបលិខិតបង្គាប់ការដោយជោគជ័យ!', 'success')
+                sub = sub or 'missions'
             conn.commit()
             conn.close()
+        if sub:
+            return redirect(url_for('documents', sub=sub))
         return redirect(url_for('documents'))
 
     conn = get_db_connection()
@@ -651,7 +744,7 @@ def add_document():
         flash('បានកត់ត្រាលិខិតផ្លូវការដោយជោគជ័យ!', 'success')
     conn.commit()
     conn.close()
-    return redirect(url_for('documents'))
+    return redirect(url_for('documents', sub='letters'))
 
 @app.route('/documents/add_mission', methods=['POST'])
 @login_required
@@ -664,26 +757,78 @@ def add_mission_order():
     destination_schools = request.form.get('destination_schools')
     start_date = request.form.get('start_date')
     end_date = request.form.get('end_date')
-    purpose = request.form.get('purpose')
+    purpose = request.form.get('purpose', '')
     ref_doc = request.form.get('ref_doc', '')
     lunar_date_str = request.form.get('lunar_date_str', '')
+    mission_type = request.form.get('mission_type', 'local')
+
+    try:
+        days_count = int(request.form.get('days_count') or 1)
+    except (ValueError, TypeError):
+        days_count = 1
+    try:
+        nights_count = int(request.form.get('nights_count') or 0)
+    except (ValueError, TypeError):
+        nights_count = 0
+    def clean_float(val, default=0.0):
+        if not val:
+            return default
+        try:
+            return float(str(val).replace(',', '').replace(' ', '').strip())
+        except (ValueError, TypeError):
+            return default
+
+    travel_cost = clean_float(request.form.get('travel_cost'), 0.0)
+    pocket_rate = clean_float(request.form.get('pocket_rate'), 0.0)
+    pocket_total = clean_float(request.form.get('pocket_total'), pocket_rate * days_count)
+    food_rate = clean_float(request.form.get('food_rate'), 0.0)
+    food_total = clean_float(request.form.get('food_total'), food_rate * days_count)
+    hotel_rate = clean_float(request.form.get('hotel_rate'), 0.0)
+    hotel_total = clean_float(request.form.get('hotel_total'), hotel_rate * nights_count)
+    total_cost = clean_float(request.form.get('total_cost'), travel_cost + pocket_total + food_total + hotel_total)
 
     conn = get_db_connection()
     if mission_id:
         conn.execute('''
-            UPDATE mission_orders SET mission_code=?, title=?, officer_names=?, destination_schools=?, start_date=?, end_date=?, purpose=?, ref_doc=?, lunar_date_str=?
+            UPDATE mission_orders SET
+                mission_code=?, title=?, officer_names=?, destination_schools=?,
+                start_date=?, end_date=?, purpose=?, ref_doc=?, lunar_date_str=?,
+                mission_type=?, days_count=?, nights_count=?, travel_cost=?,
+                pocket_rate=?, pocket_total=?, food_rate=?, food_total=?,
+                hotel_rate=?, hotel_total=?, total_cost=?
             WHERE id=?
-        ''', (mission_code, title, officer_names, destination_schools, start_date, end_date, purpose, ref_doc, lunar_date_str, mission_id))
+        ''', (
+            mission_code, title, officer_names, destination_schools,
+            start_date, end_date, purpose, ref_doc, lunar_date_str,
+            mission_type, days_count, nights_count, travel_cost,
+            pocket_rate, pocket_total, food_rate, food_total,
+            hotel_rate, hotel_total, total_cost, mission_id
+        ))
         flash('បានធ្វើបច្ចុប្បន្នភាពលិខិតបញ្ជាបេសកកម្មដោយជោគជ័យ!', 'success')
     else:
         conn.execute('''
-            INSERT INTO mission_orders (mission_code, title, officer_names, destination_schools, start_date, end_date, purpose, status, ref_doc, lunar_date_str)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?)
-        ''', (mission_code, title, officer_names, destination_schools, start_date, end_date, purpose, ref_doc, lunar_date_str))
-        flash('បានចេញលិខិតបញ្ជាបេសកកម្មដោយជោគជ័យ!', 'success')
+            INSERT INTO mission_orders (
+                mission_code, title, officer_names, destination_schools,
+                start_date, end_date, purpose, status, ref_doc, lunar_date_str,
+                mission_type, days_count, nights_count, travel_cost,
+                pocket_rate, pocket_total, food_rate, food_total,
+                hotel_rate, hotel_total, total_cost
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            mission_code, title, officer_names, destination_schools,
+            start_date, end_date, purpose, ref_doc, lunar_date_str,
+            mission_type, days_count, nights_count, travel_cost,
+            pocket_rate, pocket_total, food_rate, food_total,
+            hotel_rate, hotel_total, total_cost
+        ))
+        if mission_type == 'cross_district':
+            flash('បានបង្កើតបេសកកម្មឆ្លងស្រុកដោយជោគជ័យ!', 'success')
+        else:
+            flash('បានចេញលិខិតបញ្ជាបេសកកម្មក្នុងស្រុកដោយជោគជ័យ!', 'success')
     conn.commit()
     conn.close()
-    return redirect(url_for('documents'))
+    return redirect(url_for('documents', sub='missions'))
 
 def khmer_num_to_arabic(str_val):
     if not str_val:
@@ -1118,9 +1263,10 @@ def budget_assets():
     ''').fetchall()
 
     schools_list = conn.execute('SELECT id, name_kh FROM schools').fetchall()
+    academic_years = [r[0] for r in conn.execute('SELECT DISTINCT academic_year FROM student_stats ORDER BY academic_year DESC').fetchall() if r[0]]
     conn.close()
 
-    return render_template('budget_assets.html', active_page='budget_assets', budget_list=budget_list, assets_list=assets_list, schools=schools_list)
+    return render_template('budget_assets.html', active_page='budget_assets', budget_list=budget_list, assets_list=assets_list, schools=schools_list, academic_years=academic_years)
 
 @app.route('/budget_assets/add_budget', methods=['POST'])
 @login_required
@@ -1198,7 +1344,7 @@ def export_excel(report_type):
             for r in rows:
                 ws.append(list(r.values()) if hasattr(r, 'values') else list(r))
         elif report_type == 'mission_expenses':
-            ws.append(["ល.រ", "គោត្តនាម នាម", "លេខលិខិត", "កាលបរិច្ឆេទលិខិត", "កម្មវត្ថុនៃការចុះបេសកកម្ម", "ទីកន្លែង", "ថ្ងៃចាប់ផ្តើម", "ថ្ងៃត្រឡប់", "ប្រាក់ឧបត្ថម្ភ (៛)", "ផ្សេងៗ"])
+            ws.append(["ល.រ", "គោត្តនាម នាម", "លេខលិខិត", "កាលបរិច្ឆេទលិខិត", "កម្មវត្ថុនៃការចុះបេសកកម្មបំរើសកម្មភាព", "ទីកន្លែង", "ថ្ងៃចាប់ផ្តើម", "ថ្ងៃត្រឡប់", "ប្រាក់ឧបត្ថម្ភ (៛)", "ផ្សេងៗ"])
             rows = conn.execute('SELECT officer_names, mission_code, start_date, title, destination_schools, start_date, end_date, COALESCE(allowance_amount, 40000), COALESCE(remarks, "") FROM mission_orders ORDER BY start_date ASC').fetchall()
             for idx, r in enumerate(rows, 1):
                 r_values = list(r.values()) if hasattr(r, 'values') else list(r)
@@ -1231,6 +1377,41 @@ def export_excel(report_type):
     except Exception as e:
         flash(f'មិនអាច Export Excel បានទេ: {str(e)}', 'danger')
         return redirect(url_for('reports'))
+
+# --- PROFILE ROUTE ---
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    conn = get_db_connection()
+    user_id = session.get('user_id')
+
+    if request.method == 'POST':
+        full_name = request.form.get('full_name')
+        phone = request.form.get('phone')
+        position = request.form.get('position')
+        new_password = request.form.get('new_password')
+
+        if new_password and len(new_password.strip()) > 0:
+            from database import hash_password
+            pwd_hash = hash_password(new_password.strip())
+            conn.execute('''
+                UPDATE users SET full_name=?, phone=?, position=?, password_hash=?
+                WHERE id=?
+            ''', (full_name, phone, position, pwd_hash, user_id))
+        else:
+            conn.execute('''
+                UPDATE users SET full_name=?, phone=?, position=?
+                WHERE id=?
+            ''', (full_name, phone, position, user_id))
+
+        conn.commit()
+        session['user_name'] = full_name
+        flash('បានធ្វើបច្ចុប្បន្នភាពព័ត៌មានគណនីរបស់ខ្ញុំដោយជោគជ័យ!', 'success')
+        return redirect(url_for('profile'))
+
+    user_info = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    conn.close()
+    return render_template('profile.html', active_page='profile', user_info=user_info)
 
 @app.route('/exports/pdf/<report_type>')
 @login_required
@@ -1279,6 +1460,20 @@ def export_pdf(report_type):
 @login_required
 @role_required('admin')
 def users():
+    action = request.args.get('action')
+    user_id = request.args.get('id')
+
+    if action == 'delete' and user_id:
+        conn = get_db_connection()
+        if int(user_id) == session.get('user_id'):
+            flash('លោកអ្នកមិនអាចលុបគណនីដែលកំពុងចូលប្រើប្រាស់បច្ចុប្បន្នបានទេ!', 'danger')
+        else:
+            conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
+            conn.commit()
+            flash('បានលុបគណនីអ្នកប្រើប្រាស់ដោយជោគជ័យ!', 'success')
+        conn.close()
+        return redirect(url_for('users'))
+
     conn = get_db_connection()
     users_list = conn.execute('''
         SELECT u.*, sc.name_kh as school_name
