@@ -1135,12 +1135,6 @@ def get_officer_summary(missions):
                     'allowance': cost_per_person
                 })
 
-    # Format remarks for officers who have cross-district trips or both
-    for o in officer_map.values():
-        if o.get('cross_district_trips', 0) > 0 and o.get('school_trips', 0) > 0:
-            o['remarks'] = f"ចុះសាលា {o['school_trips']} លើក, ឆ្លងស្រុក {o['cross_district_trips']} លើក"
-        elif o.get('cross_district_trips', 0) > 0:
-            o['remarks'] = f"ឆ្លងស្រុក {o['cross_district_trips']} លើក"
 
     summary_list = list(officer_map.values())
     total_summary_trips = sum(o['trip_count'] for o in summary_list)
@@ -1458,7 +1452,7 @@ def export_excel(report_type):
             missions = conn.execute('SELECT * FROM mission_orders ORDER BY start_date ASC').fetchall()
             summary_list = get_officer_summary(missions)[0]
             for idx, o in enumerate(summary_list, 1):
-                ws.append([idx, o['staff_id_num'], o['name'], o['name_en'], o['bank_account'], o['trip_count'], o['total_amount'], o.get('remarks', '')])
+                ws.append([idx, o['staff_id_num'], o['name'], o['name_en'], o['bank_account'], o['trip_count'], o['total_amount'], ""])
         elif report_type == 'officer_audit':
             ws.append([
                 "ល.រ", "អត្តលេខ", "គោត្តនាម និង នាម", "ភេទ", "តួនាទី",
