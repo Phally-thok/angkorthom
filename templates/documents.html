@@ -12,12 +12,9 @@
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
         <div>
             <h3
-                style="font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 10px;">
-                <i class="fa-solid fa-layer-group" style="color: var(--accent-gold);"></i> ជ្រើសរើសមុខងាររង នៃ «៥.
-                លិខិតស្នាម & បេសកកម្ម»
+                style="font-size: 17px; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-layer-group" style="color: var(--accent-gold);"></i> ៥. លិខិតស្នាម & បេសកកម្ម
             </h3>
-            <p style="font-size: 13px; color: var(--text-muted); margin: 0;">គ្រប់គ្រង និងតាមដានរាល់លិខិតចេញ-ចូល
-                និងលិខិតបង្គាប់ការបេសកកម្មទាំងអស់</p>
         </div>
 
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -49,24 +46,24 @@
     </div>
 
     <div class="table-responsive">
-        <table class="custom-table">
+        <table class="custom-table" style="min-width: 960px;">
             <thead>
                 <tr>
-                    <th>លេខលិខិត</th>
-                    <th>ប្រភេទ</th>
-                    <th>កម្មវត្ថុ / ចំណងជើងលិខិត</th>
-                    <th>ប្រភព / គោលដៅ</th>
-                    <th>ប្រភេទលិខិត</th>
-                    <th>កាលបរិច្ឆេទ</th>
-                    <th>ស្ថានភាព</th>
-                    <th>សកម្មភាព</th>
+                    <th style="white-space: nowrap; width: 140px;">លេខលិខិត</th>
+                    <th style="white-space: nowrap; width: 100px;">ប្រភេទ</th>
+                    <th style="min-width: 200px;">កម្មវត្ថុ / ចំណងជើងលិខិត</th>
+                    <th style="min-width: 140px;">ប្រភព / គោលដៅ</th>
+                    <th style="white-space: nowrap; width: 120px;">ប្រភេទលិខិត</th>
+                    <th style="white-space: nowrap; width: 110px;">កាលបរិច្ឆេទ</th>
+                    <th style="white-space: nowrap; text-align: center; width: 100px;">ស្ថានភាព</th>
+                    <th style="white-space: nowrap; text-align: center; width: 130px;">សកម្មភាព</th>
                 </tr>
             </thead>
             <tbody>
                 {% for d in docs_list %}
                 <tr>
-                    <td><strong>{{ d.doc_number }}</strong></td>
-                    <td>
+                    <td style="white-space: nowrap;"><strong>{{ d.doc_number }}</strong></td>
+                    <td style="white-space: nowrap;">
                         {% if d.doc_type == 'inbound' %}
                         <span class="badge badge-primary"><i class="fa-solid fa-arrow-down-left"></i> លិខិតចូល</span>
                         {% else %}
@@ -75,17 +72,24 @@
                     </td>
                     <td>{{ d.title }}</td>
                     <td>{{ d.source_destination }}</td>
-                    <td><span class="badge badge-secondary">{{ d.category }}</span></td>
-                    <td>{{ d.doc_date }}</td>
-                    <td><span class="badge badge-success">កត់ត្រារួច</span></td>
-                    <td>
-                        <button class="btn btn-secondary btn-sm" onclick="editDocModal({{ d|tojson|forceescape }})">
-                            <i class="fa-solid fa-pen"></i> កែប្រែ
-                        </button>
-                        <a href="/documents?action=delete&target=document&id={{ d.id }}" class="btn btn-danger btn-sm"
-                            onclick="return confirm('តើអ្នកពិតជាចង់លុបលិខិតនេះមែនទេ?')">
-                            <i class="fa-solid fa-trash"></i> លុប
-                        </a>
+                    <td style="white-space: nowrap;"><span class="badge badge-secondary">{{ d.category }}</span></td>
+                    <td style="white-space: nowrap;">{{ d.doc_date }}</td>
+                    <td style="text-align: center; white-space: nowrap;"><span
+                            class="badge badge-success">កត់ត្រារួច</span></td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <div
+                            style="display: inline-flex; gap: 4px; align-items: center; justify-content: center; flex-wrap: nowrap;">
+                            <button class="btn btn-secondary btn-sm" onclick="editDocModal({{ d|tojson|forceescape }})"
+                                style="padding: 4px 8px; font-size: 11.5px; white-space: nowrap;">
+                                <i class="fa-solid fa-pen"></i> កែប្រែ
+                            </button>
+                            <a href="/documents?action=delete&target=document&id={{ d.id }}&sub=letters"
+                                class="btn btn-danger btn-sm"
+                                onclick="return confirm('តើអ្នកពិតជាចង់លុបលិខិតនេះមែនទេ?')"
+                                style="padding: 4px 8px; font-size: 11.5px; white-space: nowrap;">
+                                <i class="fa-solid fa-trash"></i> លុប
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -99,7 +103,6 @@
     <div class="panel-header">
         <div class="panel-title">
             <i class="fa-solid fa-plane-departure" style="color: var(--accent-gold);"></i> ៥.២.បេសកកម្ម
-            (គ្រប់គ្រងលិខិតបង្គាប់ការ / ចុះបេសកកម្ម)
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <a href="{{ url_for('mission_expense_report') }}" class="btn btn-gold">
@@ -107,59 +110,106 @@
             </a>
             {% if session.get('role') in ['admin', 'chief'] %}
             <button class="btn btn-primary" onclick="openAddMissionModal()">
-                <i class="fa-solid fa-file-signature"></i> បង្កើតលិខិតបញ្ជាបេសកកម្ម
+                <i class="fa-solid fa-plus"></i> បេសកកម្មក្នុងស្រុក
+            </button>
+            <button class="btn btn-warning" onclick="openAddCrossDistrictMissionModal()"
+                style="background: linear-gradient(135deg, #e67e22, #d35400); color: #fff; border: none; font-weight: 600;">
+                <i class="fa-solid fa-plus"></i> បេសកកម្មឆ្លងស្រុក
             </button>
             {% endif %}
         </div>
     </div>
 
     <div class="table-responsive">
-        <table class="custom-table">
+        <table class="custom-table" style="min-width: 1100px;">
             <thead>
                 <tr>
-                    <th>កូដបេសកកម្ម</th>
-                    <th>កម្មវត្ថុ / បេសកកម្ម</th>
-                    <th>មន្ត្រីទទួលបេសកកម្ម</th>
-                    <th>សាលារៀនគោលដៅ</th>
-                    <th>កាលបរិច្ឆេទ</th>
-                    <th>ស្ថានភាព</th>
-                    <th>សកម្មភាព</th>
+                    <th style="width: 60px; text-align: center; white-space: nowrap;">កូដ</th>
+                    <th style="width: 90px; text-align: center; white-space: nowrap;">ប្រភេទ</th>
+                    <th style="min-width: 180px;">កម្មវត្ថុ / បេសកកម្ម</th>
+                    <th style="min-width: 120px;">មន្ត្រីទទួលបេសកកម្ម</th>
+                    <th style="min-width: 120px;">ទីកន្លែង / គោលដៅ</th>
+                    <th style="white-space: nowrap; width: 170px;">កាលបរិច្ឆេទ</th>
+                    <th style="white-space: nowrap; text-align: right; width: 100px;">ថវិកាសរុប</th>
+                    <th style="white-space: nowrap; text-align: center; width: 120px;">ស្ថានភាព</th>
+                    <th style="white-space: nowrap; text-align: center; width: 260px;">សកម្មភាព</th>
                 </tr>
             </thead>
             <tbody>
                 {% for m in missions_list %}
                 <tr>
-                    <td><strong>{{ m.mission_code }}</strong></td>
-                    <td>{{ m.title }}</td>
-                    <td>{{ m.officer_names }}</td>
-                    <td>{{ m.destination_schools }}</td>
-                    <td>{{ m.start_date }} ដល់ {{ m.end_date }}</td>
-                    <td>
-                        {% if m.status == 'approved' %}
-                        <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> បានអនុម័ត</span>
-                        {% elif m.status == 'completed' %}
-                        <span class="badge badge-gold"><i class="fa-solid fa-flag-checkered"></i> បានបញ្ចប់</span>
+                    <td style="text-align: center; white-space: nowrap;"><strong>{{ m.mission_code }}</strong></td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        {% if m.mission_type == 'cross_district' %}
+                        <span class="badge"
+                            style="background: linear-gradient(135deg, #e67e22, #d35400); color: #fff; white-space: nowrap;">ឆ្លងស្រុក</span>
                         {% else %}
-                        <span class="badge badge-primary"><i class="fa-solid fa-clock"></i> រង់ចាំអនុម័ត</span>
+                        <span class="badge badge-primary" style="white-space: nowrap;">ក្នុងស្រុក</span>
                         {% endif %}
                     </td>
-                    <td>
-                        <button class="btn btn-gold btn-sm" onclick="viewMissionModal({{ m|tojson|forceescape }})"
-                            title="បោះពុម្ពលិខិតបញ្ជាបេសកកម្ម">
-                            <i class="fa-solid fa-print"></i>បេសកកម្ម
-                        </button>
-                        <button class="btn btn-primary btn-sm" onclick="viewVisaModal({{ m|tojson|forceescape }})"
-                            title="បោះពុម្ពលិខិតចុះទិដ្ឋាការធ្វើដំណើរ">
-                            <i class="fa-solid fa-print"></i> ទិដ្ឋាការ
-                        </button>
-                        <button class="btn btn-secondary btn-sm" onclick="editMissionModal({{ m|tojson|forceescape }})"
-                            title="កែប្រែ">
-                            <i class="fa-solid fa-pen"></i> កែប្រែ
-                        </button>
-                        <a href="/documents?action=delete&target=mission&id={{ m.id }}" class="btn btn-danger btn-sm"
-                            onclick="return confirm('តើអ្នកពិតជាចង់លុបលិខិតបង្គាប់ការនេះមែនទេ?')" title="លុប">
-                            <i class="fa-solid fa-trash"></i>
-                        </a>
+                    <td style="font-weight: 500;">{{ m.title }}</td>
+                    <td style="white-space: nowrap;">{{ m.officer_names }}</td>
+                    <td>{{ m.destination_schools }}</td>
+                    <td style="white-space: nowrap;">
+                        {{ m.start_date }} ដល់ {{ m.end_date }}
+                        {% if m.mission_type == 'cross_district' and m.days_count %}
+                        <br><small style="color: var(--accent-gold);">({{ m.days_count }} ថ្ងៃ, {{ m.nights_count }}
+                            យប់)</small>
+                        {% endif %}
+                    </td>
+                    <td style="white-space: nowrap; text-align: right;">
+                        {% if m.mission_type == 'cross_district' %}
+                        <strong style="color: #2ecc71;">{{ "{:,.0f}".format(m.total_cost or 0) }} ៛</strong>
+                        {% else %}
+                        <strong style="color: var(--accent-gold);">{{ "{:,.0f}".format(m.allowance_amount or 40000) }}
+                            ៛</strong>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        {% if m.status == 'approved' %}
+                        <span class="badge badge-success" style="white-space: nowrap;"><i
+                                class="fa-solid fa-circle-check"></i> បានអនុម័ត</span>
+                        {% elif m.status == 'completed' %}
+                        <span class="badge badge-gold" style="white-space: nowrap;"><i
+                                class="fa-solid fa-flag-checkered"></i> បានបញ្ចប់</span>
+                        {% else %}
+                        <span class="badge badge-primary" style="white-space: nowrap;"><i class="fa-solid fa-clock"></i>
+                            រង់ចាំអនុម័ត</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <div
+                            style="display: inline-flex; gap: 4px; align-items: center; justify-content: center; flex-wrap: nowrap;">
+                            {% if m.mission_type == 'cross_district' %}
+                            <button class="btn btn-warning btn-sm"
+                                onclick="viewCrossDistrictReportModal({{ m|tojson|forceescape }})"
+                                title="បោះពុម្ពតារាងទូទាត់ប្រាក់បេសកកម្មឆ្លងស្រុក"
+                                style="background: linear-gradient(135deg, #e67e22, #d35400); color: #fff; border: none; padding: 4px 8px; font-size: 11.5px; white-space: nowrap;">
+                                <i class="fa-solid fa-table-list"></i> តារាងទូទាត់
+                            </button>
+                            {% endif %}
+                            <button class="btn btn-gold btn-sm" onclick="viewMissionModal({{ m|tojson|forceescape }})"
+                                title="បោះពុម្ពលិខិតបញ្ជាបេសកកម្ម"
+                                style="padding: 4px 8px; font-size: 11.5px; white-space: nowrap;">
+                                <i class="fa-solid fa-print"></i> បេសកកម្ម
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="viewVisaModal({{ m|tojson|forceescape }})"
+                                title="បោះពុម្ពលិខិតចុះទិដ្ឋាការធ្វើដំណើរ"
+                                style="padding: 4px 8px; font-size: 11.5px; white-space: nowrap;">
+                                <i class="fa-solid fa-print"></i> ទិដ្ឋាការ
+                            </button>
+                            <button class="btn btn-secondary btn-sm"
+                                onclick="editMissionModal({{ m|tojson|forceescape }})" title="កែប្រែ"
+                                style="padding: 4px 8px; font-size: 11.5px; white-space: nowrap;">
+                                <i class="fa-solid fa-pen"></i> កែប្រែ
+                            </button>
+                            <a href="/documents?action=delete&target=mission&id={{ m.id }}&sub=missions"
+                                class="btn btn-danger btn-sm"
+                                onclick="return confirm('តើអ្នកពិតជាចង់លុបលិខិតបង្គាប់ការនេះមែនទេ?')" title="លុប"
+                                style="padding: 4px 8px; font-size: 11.5px; white-space: nowrap;">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -485,6 +535,305 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Add/Edit Cross-District Mission (បេសកកម្មឆ្លងស្រុក) -->
+<div class="modal-backdrop" id="addCrossDistrictMissionModal">
+    <div class="modal-box" style="max-width: 780px;">
+        <div class="modal-header">
+            <h3 id="cdMissionModalTitle"><i class="fa-solid fa-car-side" style="color: #e67e22;"></i>
+                បង្កើតបេសកកម្មឆ្លងស្រុក</h3>
+            <button class="modal-close" onclick="closeModal('addCrossDistrictMissionModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_mission_order') }}" method="POST" id="crossDistrictMissionForm">
+            <input type="hidden" name="mission_id" id="cd_mission_id">
+            <input type="hidden" name="mission_type" id="cd_mission_type" value="cross_district">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>លេខលិខិត (លេខ)</label>
+                        <input type="text" name="mission_code" id="cd_mission_code" class="form-control"
+                            placeholder="ឧ. ០៤៥" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ថ្ងៃខែស័ក / ថ្ងៃខែខ្មែរ (Khmer Date)</label>
+                        <input type="text" name="lunar_date_str" id="cd_mission_lunar_date_str" class="form-control"
+                            placeholder="ឧ. ថ្ងៃ អង្គារ ០៧ រោច ខែមាឃ ឆ្នាំរោង ព.ស ២៥៦៩">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>យោង (លិខិតយោង / លិខិតអញ្ជើញ)</label>
+                    <input type="text" name="ref_doc" id="cd_mission_ref_doc" class="form-control"
+                        placeholder="ឧ. លិខិតអញ្ជើញលេខ... របស់មន្ទីរអប់រំ យុវជន និងកីឡាខេត្តសៀមរាប">
+                </div>
+
+                <div class="form-group">
+                    <label>កម្មវត្ថុនៃការចុះបេសកកម្ម បំពេញការងារ</label>
+                    <input type="text" name="title" id="cd_mission_title" class="form-control"
+                        placeholder="ឧ. ចូលរួមវគ្គបណ្តុះបណ្តាល ឬកិច្ចប្រជុំ..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>ទីកន្លែងចុះបេសកកម្ម (Location / Destination)</label>
+                    <input type="text" name="destination_schools" id="cd_mission_destination_schools"
+                        class="form-control" placeholder="ឧ. រាជធានីភ្នំពេញ ឬ ស្រុកវ៉ារិន ខេត្តសៀមរាប" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ថ្ងៃចាប់ផ្តើម</label>
+                        <input type="date" name="start_date" id="cd_start_date" class="form-control" required
+                            onchange="calcDatesAndExpenses()">
+                    </div>
+                    <div class="form-group">
+                        <label>ថ្ងៃត្រឡប់ / បញ្ចប់</label>
+                        <input type="date" name="end_date" id="cd_end_date" class="form-control" required
+                            onchange="calcDatesAndExpenses()">
+                    </div>
+                    <div class="form-group" style="max-width: 120px;">
+                        <label>ចំនួនថ្ងៃ (Days)</label>
+                        <input type="number" name="days_count" id="cd_days_count" class="form-control" value="1" min="1"
+                            required oninput="calcDatesAndExpenses()">
+                    </div>
+                    <div class="form-group" style="max-width: 120px;">
+                        <label>ចំនួនយប់ (Nights)</label>
+                        <input type="number" name="nights_count" id="cd_nights_count" class="form-control" value="0"
+                            min="0" required oninput="calcDatesAndExpenses()">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>បញ្ជីរាយនាមមន្ត្រី និងតួនាទី (មន្ត្រី១នាក់/១ជួរ)</label>
+                    <textarea name="officer_names" id="cd_officer_names" class="form-control" rows="3"
+                        placeholder="ឧ.&#10;១. លោក អ៊ឹម សុធា  មន្ត្រីការិយាល័យ&#10;២. លោកស្រី សុខ ចាន់ណា  អនុប្រធានការិយាល័យ"
+                        required></textarea>
+                </div>
+
+                <!-- Expense Input Block directly per User Prompt with Thousand Separators (កាត់ខ្ទង់) -->
+                <div
+                    style="background: rgba(230, 126, 34, 0.08); border: 1px solid rgba(230, 126, 34, 0.4); border-radius: 8px; padding: 16px; margin-top: 15px;">
+                    <h4
+                        style="margin: 0 0 12px 0; color: #e67e22; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-calculator"></i> កំណត់ចំនួនទឹកប្រាក់ចំណាយបេសកកម្ម
+                        (វាយបញ្ចូលដោយអ្នកប្រើប្រាស់)
+                    </h4>
+
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label>១. សោហ៊ុយធ្វើដំណើរ (រៀល)</label>
+                            <input type="text" inputmode="numeric" name="travel_cost" id="cd_travel_cost"
+                                class="form-control" value="0"
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="margin-top: 8px;">
+                        <div class="form-group">
+                            <label>២. ប្រាក់ហោប៉ាវ - របប/ថ្ងៃ (រៀល)</label>
+                            <input type="text" inputmode="numeric" name="pocket_rate" id="cd_pocket_rate"
+                                class="form-control" value="40,000"
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                        </div>
+                        <div class="form-group">
+                            <label>ប្រាក់ហោប៉ាវ - សរុប (រៀល)</label>
+                            <input type="text" inputmode="numeric" name="pocket_total" id="cd_pocket_total"
+                                class="form-control" value="40,000"
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="margin-top: 8px;">
+                        <div class="form-group">
+                            <label>៣. ប្រាក់ហូបចុក - របប/ថ្ងៃ (រៀល)</label>
+                            <input type="text" inputmode="numeric" name="food_rate" id="cd_food_rate"
+                                class="form-control" value="0"
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                        </div>
+                        <div class="form-group">
+                            <label>ប្រាក់ហូបចុក - សរុប (រៀល)</label>
+                            <input type="text" inputmode="numeric" name="food_total" id="cd_food_total"
+                                class="form-control" value="0"
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="margin-top: 8px;">
+                        <div class="form-group">
+                            <label>៤. ប្រាក់ស្នាក់នៅ - របប/យប់ (រៀល)</label>
+                            <input type="text" inputmode="numeric" name="hotel_rate" id="cd_hotel_rate"
+                                class="form-control" value="0"
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                        </div>
+                        <div class="form-group">
+                            <label>ប្រាក់ស្នាក់នៅ - សរុប (រៀល)</label>
+                            <input type="text" inputmode="numeric" name="hotel_total" id="cd_hotel_total"
+                                class="form-control" value="0"
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(230, 126, 34, 0.4);">
+                        <div class="form-group" style="margin-bottom: 4px;">
+                            <label style="font-weight: 700; font-size: 15px; color: #fff;">ទឹកប្រាក់សរុប (Grand
+                                Total)</label>
+                            <input type="text" name="total_cost" id="cd_total_cost" class="form-control" readonly
+                                style="font-size: 18px; font-weight: 800; color: #2ecc71; background: rgba(46, 204, 113, 0.15); border-color: #2ecc71;">
+                        </div>
+                        <div id="cd_total_words"
+                            style="color: var(--accent-gold); font-size: 13.5px; font-weight: 600;">
+                            សរុបចំនួនទឹកប្រាក់ជាអក្សរ ៖ ...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                    onclick="closeModal('addCrossDistrictMissionModal')">បោះបង់</button>
+                <button type="submit" class="btn btn-warning"
+                    style="background: linear-gradient(135deg, #e67e22, #d35400); color: #fff; border: none; font-weight: 600;">
+                    <i class="fa-solid fa-floppy-disk"></i> រក្សាទុកបេសកកម្មឆ្លងស្រុក
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal View Printable Cross-District Mission Expense Report (របាយការណ៍ចំណាយប្រាក់បេសកកម្ម) -->
+<div class="modal-backdrop" id="viewCrossDistrictReportModal">
+    <div class="modal-box" style="max-width: 1100px; width: 98%;">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-table-list" style="color: #e67e22;"></i> របាយការណ៍ចំណាយប្រាក់បេសកកម្ម
+                (Cross-District Expense Report)</h3>
+            <button class="modal-close" onclick="closeModal('viewCrossDistrictReportModal')">&times;</button>
+        </div>
+        <div class="modal-body" style="background: #fff; color: #000; padding: 25px 30px; overflow-x: auto;">
+            <div id="cdReportPrintArea"
+                style="background: #ffffff; color: #000000; font-family: 'Kantumruy Pro', 'Khmer OS Battambang', sans-serif; font-size: 12.5px; line-height: 1.6; min-width: 950px;">
+
+                <!-- Official Header -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <div style="text-align: left; font-weight: 700; line-height: 1.5; font-size: 13.5px;">
+                        <div>ខេត្តសៀមរាប</div>
+                        <div>រដ្ឋបាលស្រុកអង្គរធំ</div>
+                        <div>ការិយាល័យអប់រំ យុវជន និងកីឡា</div>
+                    </div>
+                    <div style="text-align: center; line-height: 1.5; margin-right: 40px;">
+                        <div style="font-weight: 700; font-size: 15px;">ព្រះរាជាណាចក្រកម្ពុជា</div>
+                        <div style="font-weight: 700; font-size: 14px;">ជាតិ សាសនា ព្រះមហាក្សត្រ</div>
+                        <div style="font-size: 12px; margin-top: 1px;">៚ *** ៚</div>
+                    </div>
+                </div>
+
+                <!-- Report Title -->
+                <div style="text-align: center; font-weight: 700; font-size: 15px; margin: 12px 0 16px 0;">
+                    របាយការណ៍ចំណាយប្រាក់បេសកកម្ម ចាប់ពីថ្ងៃទី <span id="cdr_start_day"
+                        style="font-weight: 700;">__</span> ដល់ថ្ងៃទី <span id="cdr_end_day"
+                        style="font-weight: 700;">__</span> ខែ <span id="cdr_month" style="font-weight: 700;">__</span>
+                    ឆ្នាំ២០២៦
+                </div>
+
+                <!-- Table matching the user's uploaded image -->
+                <table
+                    style="width: 100%; border-collapse: collapse; text-align: center; font-size: 11.5px; border: 1px solid #000;">
+                    <thead>
+                        <tr style="background-color: #f2f2f2; font-weight: 700;">
+                            <th rowspan="2" style="border: 1px solid #000; padding: 6px 3px; width: 35px;">ល.រ</th>
+                            <th rowspan="2" style="border: 1px solid #000; padding: 6px 4px; width: 140px;">គោត្តនាម-
+                                នាម</th>
+                            <th colspan="2" style="border: 1px solid #000; padding: 6px 4px;">លិខិតបេសកកម្ម</th>
+                            <th rowspan="2" style="border: 1px solid #000; padding: 6px 4px;">កម្មវត្ថុនៃការចុះបេសកកម្ម
+                                បំពេញការងារ</th>
+                            <th rowspan="2" style="border: 1px solid #000; padding: 6px 4px; width: 110px;">ទីកន្លែង
+                            </th>
+                            <th colspan="4" style="border: 1px solid #000; padding: 6px 4px;">ការបរិច្ឆេទចុះបេសកកម្ម
+                            </th>
+                            <th rowspan="2" style="border: 1px solid #000; padding: 6px 3px; width: 80px;">
+                                សោហ៊ុយធ្វើ<br>ដំណើរ</th>
+                            <th colspan="2" style="border: 1px solid #000; padding: 6px 4px;">ប្រាក់ហោប៉ាវ</th>
+                            <th colspan="2" style="border: 1px solid #000; padding: 6px 4px;">ប្រាក់ហូបចុក</th>
+                            <th colspan="2" style="border: 1px solid #000; padding: 6px 4px;">ប្រាក់ស្នាក់នៅ</th>
+                            <th rowspan="2" style="border: 1px solid #000; padding: 6px 3px; width: 90px;">
+                                ទឹកប្រាក់<br>សរុប</th>
+                        </tr>
+                        <tr style="background-color: #f2f2f2; font-weight: 700;">
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 55px;">លេខ</th>
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 75px;">កាលបរិច្ឆេទ</th>
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 75px;">ចាប់ផ្តើម</th>
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 75px;">ត្រឡប់</th>
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 45px;">ចំនួនថ្ងៃ</th>
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 45px;">ចំនួនយប់</th>
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 60px;">របប</th>
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 65px;">សរុប</th>
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 60px;">របប</th>
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 65px;">សរុប</th>
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 60px;">របប</th>
+                            <th style="border: 1px solid #000; padding: 5px 3px; width: 65px;">សរុប</th>
+                        </tr>
+                        <!-- Official Sub-numbering row matching the user's template exactly -->
+                        <tr style="background-color: #e5e5e5; font-size: 10.5px; font-weight: bold;">
+                            <td style="border: 1px solid #000; padding: 3px;">1</td>
+                            <td style="border: 1px solid #000; padding: 3px;">2</td>
+                            <td style="border: 1px solid #000; padding: 3px;">4</td>
+                            <td style="border: 1px solid #000; padding: 3px;">5</td>
+                            <td style="border: 1px solid #000; padding: 3px;">6</td>
+                            <td style="border: 1px solid #000; padding: 3px;">7</td>
+                            <td style="border: 1px solid #000; padding: 3px;">8</td>
+                            <td style="border: 1px solid #000; padding: 3px;">9</td>
+                            <td style="border: 1px solid #000; padding: 3px;">2</td>
+                            <td style="border: 1px solid #000; padding: 3px;">3</td>
+                            <td style="border: 1px solid #000; padding: 3px;">4</td>
+                            <td style="border: 1px solid #000; padding: 3px;">5</td>
+                            <td style="border: 1px solid #000; padding: 3px;">6=2x5</td>
+                            <td style="border: 1px solid #000; padding: 3px;">7</td>
+                            <td style="border: 1px solid #000; padding: 3px;">8=2x7</td>
+                            <td style="border: 1px solid #000; padding: 3px;">9</td>
+                            <td style="border: 1px solid #000; padding: 3px;">10=3x9</td>
+                            <td style="border: 1px solid #000; padding: 3px;">11=4+6+8+10</td>
+                        </tr>
+                    </thead>
+                    <tbody id="cdr_table_tbody">
+                    </tbody>
+                    <tfoot id="cdr_table_tfoot" style="font-weight: 700; background-color: #f7f9fa;">
+                    </tfoot>
+                </table>
+
+                <!-- Amount in words -->
+                <div style="margin: 14px 0 25px 0; font-size: 13px; font-weight: 500;">
+                    សរុបចំនួនទឹកប្រាក់ជាអក្សរ ៖ <strong id="cdr_words_display"
+                        style="border-bottom: 1px dotted #000; padding: 0 8px;"></strong>
+                </div>
+
+                <!-- Signatures matching image -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 15px; font-size: 13px; line-height: 1.6;">
+                    <div style="text-align: center; width: 300px;">
+                        <div style="font-weight: 700;">បានឃើញ និង ឯកភាព</div>
+                        <div style="font-weight: 700; margin-top: 2px;">ប្រធានការិយាល័យអប់រំ យុវជន និងកីឡា</div>
+                        <div style="height: 80px;"></div>
+                    </div>
+
+                    <div style="text-align: center; width: 320px;">
+                        <div id="cdr_lunar_sign" style="font-style: italic; font-size: 12px;">ថ្ងៃ..............................ខែ..................ឆ្នាំ.............  ........ស័ក ព.ស ២៥៦...</div>
+                        <div id="cdr_solar_sign" style="font-weight: 600; margin-top: 2px;">អង្គរធំ ថ្ងៃទី.......... ខែ............ ឆ្នាំ ២០២.....</div>
+                        <div style="font-weight: 700; margin-top: 2px;">មន្ត្រីគ្រប់គ្រងហិរញ្ញវត្ថុ</div>
+                        <div style="height: 65px;"></div>
+                        <div style="text-align: right; padding-right: 35px; font-weight: 600; font-size: 12.5px;">
+                            អ្នកធ្វើ</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" class="btn btn-secondary"
+                onclick="closeModal('viewCrossDistrictReportModal')">បិទ</button>
+            <button type="button" class="btn btn-warning" onclick="printElementLandscape('cdReportPrintArea')"
+                style="background: linear-gradient(135deg, #e67e22, #d35400); color: #fff; border: none; font-weight: 600;">
+                <i class="fa-solid fa-print"></i> បោះពុម្ពរបាយការណ៍ (Print Table)
+            </button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -624,6 +973,33 @@
     }
 
     function editMissionModal(m, mission_code, title, officer_names, destination_schools, start_date, end_date, purpose) {
+        if (typeof m === 'object' && m !== null && m.mission_type === 'cross_district') {
+            // Open cross-district edit modal
+            document.getElementById('cdMissionModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color: #e67e22;"></i> កែប្រែបេសកកម្មឆ្លងស្រុក';
+            document.getElementById('cd_mission_id').value = m.id || '';
+            document.getElementById('cd_mission_code').value = m.mission_code || '';
+            document.getElementById('cd_mission_lunar_date_str').value = m.lunar_date_str || '';
+            document.getElementById('cd_mission_ref_doc').value = m.ref_doc || '';
+            document.getElementById('cd_mission_title').value = m.title || '';
+            document.getElementById('cd_mission_destination_schools').value = m.destination_schools || '';
+            document.getElementById('cd_start_date').value = m.start_date || '';
+            document.getElementById('cd_end_date').value = m.end_date || '';
+            document.getElementById('cd_days_count').value = m.days_count || 1;
+            document.getElementById('cd_nights_count').value = m.nights_count || 0;
+            document.getElementById('cd_officer_names').value = m.officer_names || '';
+            document.getElementById('cd_travel_cost').value = m.travel_cost || 0;
+            document.getElementById('cd_pocket_rate').value = m.pocket_rate || 40000;
+            document.getElementById('cd_pocket_total').value = m.pocket_total || 40000;
+            document.getElementById('cd_food_rate').value = m.food_rate || 0;
+            document.getElementById('cd_food_total').value = m.food_total || 0;
+            document.getElementById('cd_hotel_rate').value = m.hotel_rate || 0;
+            document.getElementById('cd_hotel_total').value = m.hotel_total || 0;
+            document.getElementById('cd_total_cost').value = m.total_cost || 0;
+            calcDatesAndExpenses(false);
+            openModal('addCrossDistrictMissionModal');
+            return;
+        }
+
         let id, code, t, officers, dests, start, end, purp, ref, lunar;
         if (typeof m === 'object' && m !== null) {
             id = m.id;
@@ -658,6 +1034,232 @@
         if (document.getElementById('mission_end_date')) document.getElementById('mission_end_date').value = end || '';
         if (document.getElementById('mission_purpose')) document.getElementById('mission_purpose').value = purp || '';
         openModal('addMissionModal');
+    }
+
+    function openAddCrossDistrictMissionModal() {
+        document.getElementById('cdMissionModalTitle').innerHTML = '<i class="fa-solid fa-car-side" style="color: #e67e22;"></i> បង្កើតបេសកកម្មឆ្លងស្រុក';
+        document.getElementById('cd_mission_id').value = '';
+        document.getElementById('cd_mission_code').value = '';
+        document.getElementById('cd_mission_lunar_date_str').value = '';
+        document.getElementById('cd_mission_ref_doc').value = '';
+        document.getElementById('cd_mission_title').value = '';
+        document.getElementById('cd_mission_destination_schools').value = '';
+        document.getElementById('cd_start_date').value = '';
+        document.getElementById('cd_end_date').value = '';
+        document.getElementById('cd_days_count').value = 1;
+        document.getElementById('cd_nights_count').value = 0;
+        document.getElementById('cd_officer_names').value = '';
+        document.getElementById('cd_travel_cost').value = 0;
+        document.getElementById('cd_pocket_rate').value = 40000;
+        document.getElementById('cd_pocket_total').value = 40000;
+        document.getElementById('cd_food_rate').value = 0;
+        document.getElementById('cd_food_total').value = 0;
+        document.getElementById('cd_hotel_rate').value = 0;
+        document.getElementById('cd_hotel_total').value = 0;
+        document.getElementById('cd_total_cost').value = 40000;
+        calcDatesAndExpenses(false);
+        openModal('addCrossDistrictMissionModal');
+    }
+
+    function calcDatesAndExpenses(autoDays = true) {
+        const startVal = document.getElementById('cd_start_date').value;
+        const endVal = document.getElementById('cd_end_date').value;
+
+        if (autoDays && startVal && endVal) {
+            const d1 = new Date(startVal);
+            const d2 = new Date(endVal);
+            const diffTime = d2 - d1;
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            if (diffDays > 0) {
+                document.getElementById('cd_days_count').value = diffDays;
+                document.getElementById('cd_nights_count').value = Math.max(0, diffDays - 1);
+            }
+        }
+
+        const days = parseInt(document.getElementById('cd_days_count').value) || 1;
+        const nights = parseInt(document.getElementById('cd_nights_count').value) || 0;
+
+        const travel = parseFloat(document.getElementById('cd_travel_cost').value) || 0;
+        const pRate = parseFloat(document.getElementById('cd_pocket_rate').value) || 0;
+        const fRate = parseFloat(document.getElementById('cd_food_rate').value) || 0;
+        const hRate = parseFloat(document.getElementById('cd_hotel_rate').value) || 0;
+
+        const pTotal = pRate * days;
+        const fTotal = fRate * days;
+        const hTotal = hRate * nights;
+
+        document.getElementById('cd_pocket_total').value = pTotal;
+        document.getElementById('cd_food_total').value = fTotal;
+        document.getElementById('cd_hotel_total').value = hTotal;
+
+        const grandTotal = travel + pTotal + fTotal + hTotal;
+        document.getElementById('cd_total_cost').value = grandTotal;
+
+        const words = numberToKhmerWordsJS(grandTotal);
+        const wordsElem = document.getElementById('cd_total_words');
+        if (wordsElem) wordsElem.innerText = 'សរុបចំនួនទឹកប្រាក់ជាអក្សរ ៖ ' + words;
+    }
+
+    function numberToKhmerWordsJS(n) {
+        if (!n || isNaN(n) || n === 0) return 'សូន្យរៀលគត់';
+        n = Math.round(n);
+        const digits = ['សូន្យ', 'មួយ', 'ពីរ', 'បី', 'បួន', 'ប្រាំ', 'ប្រាំមួយ', 'ប្រាំពីរ', 'ប្រាំបី', 'ប្រាំបួន'];
+        const tens = ['', 'ដប់', 'ម្ភៃ', 'សាមសិប', 'សែសិប', 'ហាសិប', 'ហុកសិប', 'ចិតសិប', 'ប៉ែតសិប', 'កៅសិប'];
+
+        function convertBelowThousand(val) {
+            let res = '';
+            if (val >= 100) {
+                res += digits[Math.floor(val / 100)] + 'រយ';
+                val %= 100;
+            }
+            if (val >= 10) {
+                res += tens[Math.floor(val / 10)];
+                val %= 10;
+            }
+            if (val > 0) {
+                res += digits[val];
+            }
+            return res;
+        }
+
+        let res = '';
+        if (n >= 1000000) {
+            res += convertBelowThousand(Math.floor(n / 1000000)) + 'លាន ';
+            n %= 1000000;
+        }
+        if (n >= 1000) {
+            res += convertBelowThousand(Math.floor(n / 1000)) + 'ពាន់ ';
+            n %= 1000;
+        }
+        if (n > 0) {
+            res += convertBelowThousand(n);
+        }
+        return res.trim() + 'រៀលគត់';
+    }
+
+    function viewCrossDistrictReportModal(m) {
+        const monthsKh = {
+            '01': 'មករា', '02': 'កុម្ភៈ', '03': 'មីនា', '04': 'មេសា',
+            '05': 'ឧសភា', '06': 'មិថុនា', '07': 'កក្កដា', '08': 'សីហា',
+            '09': 'កញ្ញា', '10': 'តុលា', '11': 'វិច្ឆិកា', '12': 'ធ្នូ'
+        };
+
+        let startDay = '__', startMonth = '__', endDay = '__', endMonth = '__', year = '២០២៦';
+        if (m.start_date) {
+            const p = m.start_date.split('-');
+            if (p.length === 3) {
+                year = p[0];
+                startMonth = monthsKh[p[1]] || p[1];
+                startDay = p[2];
+            }
+        }
+        if (m.end_date) {
+            const p = m.end_date.split('-');
+            if (p.length === 3) {
+                endMonth = monthsKh[p[1]] || p[1];
+                endDay = p[2];
+            }
+        }
+
+        document.getElementById('cdr_start_day').innerText = startDay;
+        document.getElementById('cdr_end_day').innerText = endDay;
+        document.getElementById('cdr_month').innerText = endMonth;
+
+        if (m.lunar_date_str && m.lunar_date_str.trim() !== '') {
+            document.getElementById('cdr_lunar_sign').innerText = m.lunar_date_str;
+        } else {
+            document.getElementById('cdr_lunar_sign').innerText = 'ថ្ងៃ..............................ខែ..................ឆ្នាំ.............  ........ស័ក ព.ស ២៥៦...';
+        }
+
+        // Parse officers list
+        const rawNames = m.officer_names || '';
+        let officers = rawNames.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        if (officers.length === 0) officers = [rawNames || 'មន្ត្រី'];
+
+        const numOfficers = officers.length;
+        const days = m.days_count || 1;
+        const nights = m.nights_count || 0;
+
+        const travelCost = m.travel_cost || 0;
+        const pocketRate = m.pocket_rate || 40000;
+        const pocketTotal = m.pocket_total || (pocketRate * days);
+        const foodRate = m.food_rate || 0;
+        const foodTotal = m.food_total || (foodRate * days);
+        const hotelRate = m.hotel_rate || 0;
+        const hotelTotal = m.hotel_total || (hotelRate * nights);
+        const totalCost = m.total_cost || (travelCost + pocketTotal + foodTotal + hotelTotal);
+
+        const tbody = document.getElementById('cdr_table_tbody');
+        let html = '';
+
+        officers.forEach((name, idx) => {
+            html += `<tr>`;
+            html += `<td style="border: 1px solid #000; padding: 6px 3px; font-weight: 600;">${idx + 1}</td>`;
+            html += `<td style="border: 1px solid #000; padding: 6px 6px; text-align: left; font-weight: 500;">${name}</td>`;
+
+            if (idx === 0) {
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; font-weight: 600; vertical-align: middle;">${m.mission_code || ''}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; vertical-align: middle;">${m.start_date || ''}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 6px; text-align: left; vertical-align: middle;">${m.title || ''}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 4px; vertical-align: middle;">${m.destination_schools || ''}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; vertical-align: middle;">${m.start_date || ''}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; vertical-align: middle;">${m.end_date || ''}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; vertical-align: middle; font-weight: 600;">${days}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; vertical-align: middle; font-weight: 600;">${nights}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; text-align: right; vertical-align: middle;">${travelCost ? travelCost.toLocaleString() : '-'}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; text-align: right; vertical-align: middle;">${pocketRate ? pocketRate.toLocaleString() : '-'}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; text-align: right; vertical-align: middle; font-weight: 600;">${pocketTotal ? pocketTotal.toLocaleString() : '-'}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; text-align: right; vertical-align: middle;">${foodRate ? foodRate.toLocaleString() : '-'}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; text-align: right; vertical-align: middle; font-weight: 600;">${foodTotal ? foodTotal.toLocaleString() : '-'}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; text-align: right; vertical-align: middle;">${hotelRate ? hotelRate.toLocaleString() : '-'}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 3px; text-align: right; vertical-align: middle; font-weight: 600;">${hotelTotal ? hotelTotal.toLocaleString() : '-'}</td>`;
+                html += `<td rowspan="${numOfficers}" style="border: 1px solid #000; padding: 6px 4px; text-align: right; font-weight: 700; color: #000; vertical-align: middle;">${totalCost ? totalCost.toLocaleString() : '-'}</td>`;
+            }
+            html += `</tr>`;
+        });
+        tbody.innerHTML = html;
+
+        // Footer Row
+        const tfoot = document.getElementById('cdr_table_tfoot');
+        tfoot.innerHTML = `
+            <tr>
+                <td colspan="10" style="border: 1px solid #000; padding: 6px 10px; text-align: center; font-weight: 700;">សរុប (Grand Total)</td>
+                <td style="border: 1px solid #000; padding: 6px 3px; text-align: right; font-weight: 700;">${travelCost ? travelCost.toLocaleString() : '-'}</td>
+                <td style="border: 1px solid #000; padding: 6px 3px;"></td>
+                <td style="border: 1px solid #000; padding: 6px 3px; text-align: right; font-weight: 700;">${pocketTotal ? pocketTotal.toLocaleString() : '-'}</td>
+                <td style="border: 1px solid #000; padding: 6px 3px;"></td>
+                <td style="border: 1px solid #000; padding: 6px 3px; text-align: right; font-weight: 700;">${foodTotal ? foodTotal.toLocaleString() : '-'}</td>
+                <td style="border: 1px solid #000; padding: 6px 3px;"></td>
+                <td style="border: 1px solid #000; padding: 6px 3px; text-align: right; font-weight: 700;">${hotelTotal ? hotelTotal.toLocaleString() : '-'}</td>
+                <td style="border: 1px solid #000; padding: 6px 4px; text-align: right; font-weight: 700; background-color: #ffff00; color: #000;">${totalCost ? totalCost.toLocaleString() : '-'}</td>
+            </tr>
+        `;
+
+        document.getElementById('cdr_words_display').innerText = numberToKhmerWordsJS(totalCost);
+        openModal('viewCrossDistrictReportModal');
+    }
+
+    function printElementLandscape(elementId) {
+        const elem = document.getElementById(elementId);
+        if (!elem) return;
+        const printWindow = window.open('', '_blank', 'height=850,width=1150');
+        printWindow.document.write('<!DOCTYPE html><html><head><title>របាយការណ៍ចំណាយប្រាក់បេសកកម្ម</title>');
+        printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">');
+        printWindow.document.write('<style>');
+        printWindow.document.write('@page { size: A4 landscape; margin: 8mm 10mm; }');
+        printWindow.document.write('body { font-family: "Kantumruy Pro", "Khmer OS Battambang", sans-serif; background: #ffffff; color: #000000; margin: 0; padding: 10px; font-size: 11.5px; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }');
+        printWindow.document.write('table { border-collapse: collapse; width: 100%; }');
+        printWindow.document.write('th, td { border: 1px solid #000; }');
+        printWindow.document.write('</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(elem.innerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(function () {
+            printWindow.print();
+            printWindow.close();
+        }, 500);
     }
 
     function editDocModal(doc, doc_number, doc_type, title, source_destination, doc_date) {

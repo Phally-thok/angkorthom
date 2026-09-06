@@ -9,44 +9,47 @@
 {% block content %}
 <!-- Top Toolbar Controls & Report Tabs (Hidden during print) -->
 <div class="panel no-print" style="margin-bottom: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-        <form method="GET" action="{{ url_for('mission_expense_report') }}" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <label style="font-size: 13px;">ចាប់ពីថ្ងៃទី៖</label>
-                <input type="date" name="start_date" class="form-control" value="{{ start_date }}" style="padding: 6px 10px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; padding-bottom: 4px;">
+        <form method="GET" action="{{ url_for('mission_expense_report') }}" style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; white-space: nowrap; margin: 0;">
+            <div style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                <label style="font-size: 13px; font-weight: 500; white-space: nowrap;">ចាប់ពីថ្ងៃទី៖</label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date }}" style="width: 135px; padding: 6px 8px; font-size: 12.5px;">
             </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <label style="font-size: 13px;">ដល់ថ្ងៃទី៖</label>
-                <input type="date" name="end_date" class="form-control" value="{{ end_date }}" style="padding: 6px 10px;">
+            <div style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                <label style="font-size: 13px; font-weight: 500; white-space: nowrap;">ដល់ថ្ងៃទី៖</label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date }}" style="width: 135px; padding: 6px 8px; font-size: 12.5px;">
             </div>
-            <button type="submit" class="btn btn-primary btn-sm">
+            <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap;">
                 <i class="fa-solid fa-filter"></i> ស្វែងរក
             </button>
-            <a href="{{ url_for('mission_expense_report') }}" class="btn btn-secondary btn-sm" title="បង្ហាញទាំងអស់">
+            <a href="{{ url_for('mission_expense_report') }}" class="btn btn-secondary btn-sm" title="បង្ហាញទាំងអស់" style="white-space: nowrap;">
                 <i class="fa-solid fa-rotate"></i> ទាំងអស់
             </a>
         </form>
 
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a id="btn-excel-export" href="{{ url_for('export_excel', report_type='mission_expenses') }}" class="btn btn-success">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; white-space: nowrap;">
+            <a id="btn-excel-export" href="{{ url_for('export_excel', report_type='mission_expenses') }}" class="btn btn-success btn-sm" style="white-space: nowrap;">
                 <i class="fa-solid fa-file-excel"></i> ទាញយកជា Excel
             </a>
-            <button class="btn btn-primary" onclick="window.print()">
+            <button class="btn btn-primary btn-sm" onclick="window.print()" style="white-space: nowrap;">
                 <i class="fa-solid fa-print"></i> បោះពុម្ពរបាយការណ៍
             </button>
-            <a href="{{ url_for('documents') }}" class="btn btn-secondary">
+            <a href="{{ url_for('documents', sub='missions') }}" class="btn btn-secondary btn-sm" style="white-space: nowrap;">
                 <i class="fa-solid fa-arrow-left"></i> ត្រឡប់ក្រោយ
             </a>
         </div>
     </div>
 
     <!-- Navigation Tabs for Separate Reports -->
-    <div style="display: flex; gap: 12px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 16px; flex-wrap: wrap;">
-        <button id="tab-itemized" class="btn btn-gold" onclick="switchReportTab('itemized')">
+    <div style="display: flex; gap: 10px; margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 14px; flex-wrap: nowrap; overflow-x: auto; white-space: nowrap;">
+        <button id="tab-itemized" class="btn btn-gold" onclick="switchReportTab('itemized')" style="white-space: nowrap;">
             <i class="fa-solid fa-list-check"></i> ១. របាយការណ៍ចំណាយប្រាក់បេសកកម្ម (លម្អិត)
         </button>
-        <button id="tab-summary" class="btn btn-secondary" onclick="switchReportTab('summary')">
+        <button id="tab-summary" class="btn btn-secondary" onclick="switchReportTab('summary')" style="white-space: nowrap;">
             <i class="fa-solid fa-users-rectangle"></i> ២. របាយការណ៍ចំណាយបេសកកម្មរបស់មន្ត្រីម្នាក់ៗ
+        </button>
+        <button id="tab-cross-district" class="btn btn-secondary" onclick="switchReportTab('cross_district')" style="white-space: nowrap;">
+            <i class="fa-solid fa-car-side"></i> ៣. របាយការណ៍បេសកកម្មឆ្លងស្រុក (តារាងផ្លូវការ)
         </button>
     </div>
 </div>
@@ -279,6 +282,158 @@
     </div>
 </div>
 
+<!-- ============================================================================== -->
+<!-- REPORT VIEW 3: CROSS-DISTRICT MISSION EXPENSE REPORT (របាយការណ៍បេសកកម្មឆ្លងស្រុក) -->
+<!-- ============================================================================== -->
+<div id="report-view-cross-district" class="report-paper" style="display: none; font-size: 11.5px;">
+    <!-- Header Section -->
+    <div class="report-header">
+        <div class="header-left">
+            <div><strong>ខេត្តសៀមរាប</strong></div>
+            <div><strong>រដ្ឋបាលស្រុកអង្គរធំ</strong></div>
+            <div>ការិយាល័យអប់រំ យុវជន និងកីឡា</div>
+        </div>
+        <div class="header-right" style="text-align: center; margin-right: 80px;">
+            <div style="font-weight: 700; font-size: 16px;">ព្រះរាជាណាចក្រកម្ពុជា</div>
+            <div style="font-weight: 700; font-size: 14px;">ជាតិ សាសនា ព្រះមហាក្សត្រ</div>
+            <div style="font-size: 12px; margin-top: 2px;">--- ៚ *** ៚ ---</div>
+        </div>
+    </div>
+
+    <!-- Main Title -->
+    <div class="report-title" style="font-size: 15px; margin: 12px 0 16px 0;">
+        របាយការណ៍ចំណាយប្រាក់បេសកកម្ម ចាប់ពីថ្ងៃទី {{ start_date_display }} ដល់ ថ្ងៃទី {{ end_date_display }}
+    </div>
+
+    <!-- Official Report Data Table matching photo exactly -->
+    <table class="official-report-table" style="font-size: 11px;">
+        <thead>
+            <tr style="background: #eef2f5;">
+                <th rowspan="2" style="width: 30px;">ល.រ</th>
+                <th rowspan="2" style="width: 140px;">គោត្តនាម- នាម</th>
+                <th colspan="2">លិខិតបេសកកម្ម</th>
+                <th rowspan="2">កម្មវត្ថុនៃការចុះបេសកកម្ម បំពេញការងារ</th>
+                <th rowspan="2" style="width: 110px;">ទីកន្លែង</th>
+                <th colspan="4">ការបរិច្ឆេទចុះបេសកកម្ម</th>
+                <th rowspan="2" style="width: 80px;">សោហ៊ុយធ្វើ<br>ដំណើរ</th>
+                <th colspan="2">ប្រាក់ហោប៉ាវ</th>
+                <th colspan="2">ប្រាក់ហូបចុក</th>
+                <th colspan="2">ប្រាក់ស្នាក់នៅ</th>
+                <th rowspan="2" style="width: 90px;">ទឹកប្រាក់<br>សរុប</th>
+            </tr>
+            <tr style="background: #eef2f5;">
+                <th style="width: 55px;">លេខ</th>
+                <th style="width: 75px;">កាលបរិច្ឆេទ</th>
+                <th style="width: 75px;">ចាប់ផ្តើម</th>
+                <th style="width: 75px;">ត្រឡប់</th>
+                <th style="width: 45px;">ចំនួនថ្ងៃ</th>
+                <th style="width: 45px;">ចំនួនយប់</th>
+                <th style="width: 60px;">របប</th>
+                <th style="width: 65px;">សរុប</th>
+                <th style="width: 60px;">របប</th>
+                <th style="width: 65px;">សរុប</th>
+                <th style="width: 60px;">របប</th>
+                <th style="width: 65px;">សរុប</th>
+            </tr>
+            <tr style="background: #e5e5e5; font-size: 10px; font-weight: bold;">
+                <td>1</td>
+                <td>2</td>
+                <td>4</td>
+                <td>5</td>
+                <td>6</td>
+                <td>7</td>
+                <td>8</td>
+                <td>9</td>
+                <td>2</td>
+                <td>3</td>
+                <td>4</td>
+                <td>5</td>
+                <td>6=2x5</td>
+                <td>7</td>
+                <td>8=2x7</td>
+                <td>9</td>
+                <td>10=3x9</td>
+                <td>11=4+6+8+10</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% set cd_state = namespace(idx=0, total_travel=0, total_pocket=0, total_food=0, total_hotel=0, grand_total=0) %}
+            {% for m in missions %}
+                {% if m.mission_type == 'cross_district' %}
+                    {% set m_officers = m.officer_names.split('\n') %}
+                    {% for raw_name in m_officers %}
+                        {% if raw_name.strip() %}
+                            {% set cd_state.idx = cd_state.idx + 1 %}
+                            {% set cd_state.total_travel = cd_state.total_travel + (m.travel_cost or 0) %}
+                            {% set cd_state.total_pocket = cd_state.total_pocket + (m.pocket_total or 0) %}
+                            {% set cd_state.total_food = cd_state.total_food + (m.food_total or 0) %}
+                            {% set cd_state.total_hotel = cd_state.total_hotel + (m.hotel_total or 0) %}
+                            {% set cd_state.grand_total = cd_state.grand_total + (m.total_cost or 0) %}
+                            <tr>
+                                <td>{{ cd_state.idx }}</td>
+                                <td style="text-align: left; font-weight: 500;">{{ raw_name.strip() }}</td>
+                                <td>{{ m.mission_code }}</td>
+                                <td>{{ m.start_date }}</td>
+                                <td style="text-align: left;">{{ m.title }}</td>
+                                <td>{{ m.destination_schools }}</td>
+                                <td>{{ m.start_date }}</td>
+                                <td>{{ m.end_date }}</td>
+                                <td>{{ m.days_count or 1 }}</td>
+                                <td>{{ m.nights_count or 0 }}</td>
+                                <td style="text-align: right;">{{ "{:,.0f}".format(m.travel_cost or 0) if m.travel_cost else '-' }}</td>
+                                <td style="text-align: right;">{{ "{:,.0f}".format(m.pocket_rate or 0) if m.pocket_rate else '-' }}</td>
+                                <td style="text-align: right; font-weight: 600;">{{ "{:,.0f}".format(m.pocket_total or 0) if m.pocket_total else '-' }}</td>
+                                <td style="text-align: right;">{{ "{:,.0f}".format(m.food_rate or 0) if m.food_rate else '-' }}</td>
+                                <td style="text-align: right; font-weight: 600;">{{ "{:,.0f}".format(m.food_total or 0) if m.food_total else '-' }}</td>
+                                <td style="text-align: right;">{{ "{:,.0f}".format(m.hotel_rate or 0) if m.hotel_rate else '-' }}</td>
+                                <td style="text-align: right; font-weight: 600;">{{ "{:,.0f}".format(m.hotel_total or 0) if m.hotel_total else '-' }}</td>
+                                <td style="text-align: right; font-weight: 700; color: #000;">{{ "{:,.0f}".format(m.total_cost or 0) if m.total_cost else '-' }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            {% if cd_state.idx == 0 %}
+            <tr>
+                <td colspan="18" style="text-align: center; padding: 25px; color: #777;">
+                    ពុំមានទិន្នន័យបេសកកម្មឆ្លងស្រុកក្នុងចន្លោះកាលបរិច្ឆេទនេះទេ។ (លោកអ្នកអាចបង្កើតបេសកកម្មឆ្លងស្រុកថ្មី នៅក្នុងផ្នែក ៥.២.បេសកកម្ម)
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+        <tfoot style="font-weight: 700; background-color: #f7f9fa;">
+            <tr>
+                <td colspan="10" style="text-align: center;">សរុប (Grand Total)</td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(cd_state.total_travel) if cd_state.total_travel else '-' }}</td>
+                <td></td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(cd_state.total_pocket) if cd_state.total_pocket else '-' }}</td>
+                <td></td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(cd_state.total_food) if cd_state.total_food else '-' }}</td>
+                <td></td>
+                <td style="text-align: right;">{{ "{:,.0f}".format(cd_state.total_hotel) if cd_state.total_hotel else '-' }}</td>
+                <td style="text-align: right; background-color: #ffff00; color: #000; font-weight: 700;">{{ "{:,.0f}".format(cd_state.grand_total) if cd_state.grand_total else '-' }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- Signatures -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 25px; font-size: 13px; line-height: 1.6;">
+        <div style="text-align: center; width: 300px;">
+            <div style="font-weight: 700;">បានឃើញ និង ឯកភាព</div>
+            <div style="font-weight: 700; margin-top: 2px;">ប្រធានការិយាល័យអប់រំ យុវជន និងកីឡា</div>
+            <div style="height: 80px;"></div>
+        </div>
+
+        <div style="text-align: center; width: 320px;">
+            <div style="font-style: italic; font-size: 12px;">ថ្ងៃ..............................ខែ..................ឆ្នាំ.............  ........ស័ក ព.ស ២៥៦...</div>
+            <div style="font-weight: 600; margin-top: 2px;">អង្គរធំ ថ្ងៃទី.......... ខែ............ ឆ្នាំ ២០២.....</div>
+            <div style="font-weight: 700; margin-top: 2px;">មន្ត្រីគ្រប់គ្រងហិរញ្ញវត្ថុ</div>
+            <div style="height: 65px;"></div>
+            <div style="text-align: right; padding-right: 35px; font-weight: 600; font-size: 12.5px;">អ្នកធ្វើ</div>
+        </div>
+    </div>
+</div>
+
 <style>
 .report-paper {
     background: #ffffff;
@@ -392,32 +547,33 @@
 function switchReportTab(tabName) {
     const viewItemized = document.getElementById('report-view-itemized');
     const viewSummary = document.getElementById('report-view-summary');
+    const viewCrossDistrict = document.getElementById('report-view-cross-district');
     const tabItemized = document.getElementById('tab-itemized');
     const tabSummary = document.getElementById('tab-summary');
+    const tabCrossDistrict = document.getElementById('tab-cross-district');
     const excelBtn = document.getElementById('btn-excel-export');
 
+    // Hide all
+    if (viewItemized) { viewItemized.style.display = 'none'; viewItemized.classList.remove('active-print'); }
+    if (viewSummary) { viewSummary.style.display = 'none'; viewSummary.classList.remove('active-print'); }
+    if (viewCrossDistrict) { viewCrossDistrict.style.display = 'none'; viewCrossDistrict.classList.remove('active-print'); }
+
+    if (tabItemized) tabItemized.className = 'btn btn-secondary';
+    if (tabSummary) tabSummary.className = 'btn btn-secondary';
+    if (tabCrossDistrict) tabCrossDistrict.className = 'btn btn-secondary';
+
     if (tabName === 'summary') {
-        viewItemized.style.display = 'none';
-        viewItemized.classList.remove('active-print');
-
-        viewSummary.style.display = 'block';
-        viewSummary.classList.add('active-print');
-
-        tabItemized.className = 'btn btn-secondary';
-        tabSummary.className = 'btn btn-gold';
-
-        excelBtn.href = "{{ url_for('export_excel', report_type='officer_summary') }}";
+        if (viewSummary) { viewSummary.style.display = 'block'; viewSummary.classList.add('active-print'); }
+        if (tabSummary) tabSummary.className = 'btn btn-gold';
+        if (excelBtn) excelBtn.href = "{{ url_for('export_excel', report_type='officer_summary') }}";
+    } else if (tabName === 'cross_district') {
+        if (viewCrossDistrict) { viewCrossDistrict.style.display = 'block'; viewCrossDistrict.classList.add('active-print'); }
+        if (tabCrossDistrict) tabCrossDistrict.className = 'btn btn-gold';
+        if (excelBtn) excelBtn.href = "{{ url_for('export_excel', report_type='mission_expenses') }}";
     } else {
-        viewSummary.style.display = 'none';
-        viewSummary.classList.remove('active-print');
-
-        viewItemized.style.display = 'block';
-        viewItemized.classList.add('active-print');
-
-        tabItemized.className = 'btn btn-gold';
-        tabSummary.className = 'btn btn-secondary';
-
-        excelBtn.href = "{{ url_for('export_excel', report_type='mission_expenses') }}";
+        if (viewItemized) { viewItemized.style.display = 'block'; viewItemized.classList.add('active-print'); }
+        if (tabItemized) tabItemized.className = 'btn btn-gold';
+        if (excelBtn) excelBtn.href = "{{ url_for('export_excel', report_type='mission_expenses') }}";
     }
 }
 </script>
