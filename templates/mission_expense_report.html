@@ -37,7 +37,7 @@
             <button type="button" class="btn btn-primary btn-sm" onclick="printAllReports()" style="white-space: nowrap;" title="បោះពុម្ពរបាយការណ៍ទាំង៤ទាំងអស់ (ឬ Save as PDF)">
                 <i class="fa-solid fa-print"></i> បោះពុម្ពទាំងអស់
             </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()" style="white-space: nowrap;" title="បោះពុម្ពតែទំព័រដែលកំពុងមើល">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="printCurrentReport()" style="white-space: nowrap;" title="បោះពុម្ពតែទំព័រដែលកំពុងមើល">
                 <i class="fa-solid fa-file-lines"></i> បោះពុម្ពទំព័រនេះ
             </button>
             <a href="{{ url_for('documents', sub='missions') }}" class="btn btn-secondary btn-sm" style="white-space: nowrap;">
@@ -772,49 +772,46 @@
 }
 
 /* Print Optimization */
+/* Print Optimization for Native Browser Print (Ctrl+P) */
 @media print {
-    /* Hide all layout elements that are not part of the printed reports */
+    html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        overflow: visible !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    .report-paper.active-print,
+    .report-paper.active-print * {
+        visibility: visible !important;
+    }
+
+    .report-paper.active-print {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #ffffff !important;
+    }
+
+    .no-print,
     .sidebar,
     .top-bar,
-    .panel.no-print,
-    .no-print,
-    .alert,
+    .panel,
     #officerAuditModal,
     .modal-backdrop,
     .user-dropdown-menu {
         display: none !important;
-    }
-
-    body {
-        background: #ffffff !important;
-        color: #000000 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    .app-container,
-    .main-content,
-    .content-body {
-        display: block !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        background: transparent !important;
-    }
-
-    .report-paper {
-        background: #ffffff !important;
-        color: #000000 !important;
-        box-shadow: none !important;
-        border: none !important;
-        margin: 0 !important;
-        padding: 8px 12px !important;
-        width: 100% !important;
-    }
-
-    .print-break-after {
-        page-break-after: always !important;
-        break-after: page !important;
     }
 
     .report-signatures {
@@ -841,7 +838,7 @@
 
     @page {
         size: A4 landscape;
-        margin: 8mm 10mm;
+        margin: 10mm;
     }
 }
 </style>
@@ -897,50 +894,188 @@ function switchReportTab(tabName) {
     }
 }
 
+// Function to print isolated report content cleanly without any page layout interference
+function printIsolatedElement(htmlContent, title) {
+    let frame = document.getElementById('report-print-frame');
+    if (frame) {
+        try { frame.remove(); } catch(e) {}
+    }
+
+    frame = document.createElement('iframe');
+    frame.id = 'report-print-frame';
+    frame.style.position = 'fixed';
+    frame.style.right = '0';
+    frame.style.bottom = '0';
+    frame.style.width = '0';
+    frame.style.height = '0';
+    frame.style.border = 'none';
+    frame.style.visibility = 'hidden';
+    document.body.appendChild(frame);
+
+    const doc = frame.contentWindow.document;
+    doc.open();
+    doc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>${title || 'របាយការណ៍បេសកកម្ម'}</title>
+            <style>
+                @page { 
+                    size: A4 landscape; 
+                    margin: 8mm 10mm; 
+                }
+                * {
+                    box-sizing: border-box;
+                }
+                body {
+                    margin: 0;
+                    padding: 0;
+                    background: #ffffff !important;
+                    color: #000000 !important;
+                    font-family: 'Kantumruy Pro', 'Khmer OS Battambang', 'Segoe UI', Tahoma, sans-serif;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                .report-paper {
+                    width: 100% !important;
+                    box-shadow: none !important;
+                    border: none !important;
+                    margin: 0 0 20px 0 !important;
+                    padding: 0 !important;
+                    background: #ffffff !important;
+                    color: #000000 !important;
+                }
+                .report-paper.page-break {
+                    page-break-after: always !important;
+                    break-after: page !important;
+                }
+                .report-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    margin-bottom: 20px;
+                }
+                .header-right { 
+                    text-align: center; 
+                    margin-right: 80px; 
+                }
+                .report-title {
+                    text-align: center;
+                    font-size: 16.5px;
+                    font-weight: 700;
+                    margin: 15px 0 15px 0;
+                    color: #000000;
+                }
+                .official-report-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 11px;
+                    color: #000000;
+                    margin-top: 10px;
+                }
+                .official-report-table th, 
+                .official-report-table td {
+                    border: 1px solid #000000 !important;
+                    padding: 5px 6px;
+                    vertical-align: middle;
+                }
+                .official-report-table th {
+                    background-color: #dfdbc9 !important;
+                    font-weight: 700;
+                    text-align: center;
+                }
+                .official-report-table .sub-num-row td {
+                    text-align: center;
+                    font-weight: 600;
+                    font-size: 10.5px;
+                    background-color: #f2efe4 !important;
+                }
+                .report-signatures {
+                    margin-top: 30px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    font-size: 13px;
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
+                }
+                .sig-box-left { 
+                    text-align: center; 
+                    margin-left: 80px; 
+                }
+                .sig-box-right { 
+                    text-align: center; 
+                }
+                .sig-space { 
+                    height: 75px; 
+                }
+                .no-print { 
+                    display: none !important; 
+                }
+                thead { display: table-header-group !important; }
+                tfoot { display: table-footer-group !important; }
+                tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+            </style>
+        </head>
+        <body>
+            ${htmlContent}
+        </body>
+        </html>
+    `);
+    doc.close();
+
+    setTimeout(() => {
+        try {
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+        } catch(e) {
+            console.warn('Iframe print error, falling back to window.print():', e);
+            window.print();
+        }
+    }, 300);
+}
+
+// Print Current Report tab cleanly
+function printCurrentReport() {
+    const targetEl = document.getElementById(
+        currentActiveTab === 'itemized' ? 'report-view-itemized' :
+        currentActiveTab === 'summary' ? 'report-view-summary' :
+        currentActiveTab === 'audit' ? 'report-view-audit' :
+        'report-view-cross-district'
+    );
+
+    if (targetEl) {
+        printIsolatedElement(targetEl.outerHTML, 'បោះពុម្ពរបាយការណ៍');
+    } else {
+        window.print();
+    }
+}
+
 // Print all 4 reports sequentially with page breaks
 function printAllReports() {
-    const papers = [
-        document.getElementById('report-view-cross-district'),
-        document.getElementById('report-view-itemized'),
-        document.getElementById('report-view-summary'),
-        document.getElementById('report-view-audit')
-    ];
+    const rep1 = document.getElementById('report-view-cross-district');
+    const rep2 = document.getElementById('report-view-itemized');
+    const rep3 = document.getElementById('report-view-summary');
+    const rep4 = document.getElementById('report-view-audit');
 
-    // Store current display state
-    const prevDisplays = papers.map(p => p ? p.style.display : 'none');
-
-    // Show all reports and add page break between them
-    papers.forEach((p, idx) => {
-        if (p) {
-            p.style.display = 'block';
-            p.classList.add('active-print');
-            if (idx < papers.length - 1) {
-                p.classList.add('print-break-after');
-            } else {
-                p.classList.remove('print-break-after');
+    let combinedHTML = '';
+    const reports = [rep1, rep2, rep3, rep4];
+    reports.forEach((rep, idx) => {
+        if (rep) {
+            const isLast = (idx === reports.length - 1);
+            const clone = rep.cloneNode(true);
+            clone.style.display = 'block';
+            if (!isLast) {
+                clone.classList.add('page-break');
             }
+            combinedHTML += clone.outerHTML;
         }
     });
 
-    setTimeout(() => {
-        window.print();
-    }, 120);
-
-    const restoreView = () => {
-        papers.forEach((p, idx) => {
-            if (p) {
-                p.classList.remove('print-break-after');
-                p.style.display = prevDisplays[idx];
-                if (prevDisplays[idx] === 'none') {
-                    p.classList.remove('active-print');
-                }
-            }
-        });
-        window.removeEventListener('afterprint', restoreView);
-    };
-
-    window.addEventListener('afterprint', restoreView);
-    setTimeout(restoreView, 3500);
+    printIsolatedElement(combinedHTML, 'បោះពុម្ពរបាយការណ៍ទាំងអស់');
 }
 
 // Direct Download as PDF using html2pdf.js with fallback to print dialog
