@@ -1216,11 +1216,15 @@ def mission_expense_report():
     missions = conn.execute(query, params).fetchall()
     conn.close()
 
-    mission_groups = group_missions_by_period(missions)
+    # Separate missions strictly: School visit missions vs Cross-district missions
+    local_missions = [m for m in missions if (m.get('mission_type') or 'local') != 'cross_district']
+    cross_district_missions = [m for m in missions if m.get('mission_type') == 'cross_district']
+
+    mission_groups = group_missions_by_period(local_missions)
     total_allowance = sum(g['subtotal'] for g in mission_groups)
     total_allowance_words = number_to_khmer_words(total_allowance)
 
-    officer_summary, total_summary_trips, total_summary_amount = get_officer_summary(missions)
+    officer_summary, total_summary_trips, total_summary_amount = get_officer_summary(local_missions)
     total_summary_amount_words = number_to_khmer_words(total_summary_amount)
 
     start_date_display = start_date if start_date else '១៧/០៤/២០២៦'
@@ -1230,6 +1234,8 @@ def mission_expense_report():
         'mission_expense_report.html',
         active_page='documents',
         missions=missions,
+        local_missions=local_missions,
+        cross_district_missions=cross_district_missions,
         mission_groups=mission_groups,
         total_allowance=total_allowance,
         total_allowance_words=total_allowance_words,
@@ -1345,13 +1351,35 @@ def export_excel(report_type):
                 ws.append(list(r.values()) if hasattr(r, 'values') else list(r))
         elif report_type == 'mission_expenses':
             ws.append(["ល.រ", "គោត្តនាម នាម", "លេខលិខិត", "កាលបរិច្ឆេទលិខិត", "កម្មវត្ថុនៃការចុះបេសកកម្មបំរើសកម្មភាព", "ទីកន្លែង", "ថ្ងៃចាប់ផ្តើម", "ថ្ងៃត្រឡប់", "ប្រាក់ឧបត្ថម្ភ (៛)", "ផ្សេងៗ"])
-            rows = conn.execute('SELECT officer_names, mission_code, start_date, title, destination_schools, start_date, end_date, COALESCE(allowance_amount, 40000), COALESCE(remarks, "") FROM mission_orders ORDER BY start_date ASC').fetchall()
+            rows = conn.execute('SELECT officer_names, mission_code, start_date, title, destination_schools, start_date, end_date, COALESCE(allowance_amount, 40000), COALESCE(remarks, "") FROM mission_orders WHERE COALESCE(mission_type, "local") != "cross_district" ORDER BY start_date ASC').fetchall()
             for idx, r in enumerate(rows, 1):
                 r_values = list(r.values()) if hasattr(r, 'values') else list(r)
                 ws.append([idx] + r_values)
+        elif report_type == 'cross_district_expenses':
+            ws.append(["ល.រ", "គោត្តនាម នាម", "លេខលិខិត", "កាលបរិច្ឆេទលិខិត", "កម្មវត្ថុនៃការចុះបេសកកម្មបំពេញការងារ", "ទីកន្លែង", "ថ្ងៃចាប់ផ្តើម", "ថ្ងៃត្រឡប់", "ចំនួនថ្ងៃ", "ចំនួនយប់", "សោហ៊ុយធ្វើដំណើរ", "របបប្រាក់ហោប៉ាវ", "សរុបប្រាក់ហោប៉ាវ", "របបប្រាក់ហូបចុក", "សរុបប្រាក់ហូបចុក", "របបប្រាក់ស្នាក់នៅ", "សរុបប្រាក់ស្នាក់នៅ", "ទឹកប្រាក់សរុប"])
+            rows = conn.execute('SELECT officer_names, mission_code, start_date, title, destination_schools, start_date, end_date, days_count, nights_count, travel_cost, pocket_rate, pocket_total, food_rate, food_total, hotel_rate, hotel_total, total_cost FROM mission_orders WHERE mission_type = "cross_district" ORDER BY start_date ASC').fetchall()
+            cd_idx = 1
+            for r in rows:
+                r_dict = dict(r) if hasattr(r, 'keys') else {}
+                names = [n.strip() for n in (r_dict.get('officer_names') or '').split('\n') if n.strip()]
+                if not names:
+                    names = [r_dict.get('officer_names') or '']
+                for n in names:
+                    ws.append([
+                        cd_idx, n, r_dict.get('mission_code'), r_dict.get('start_date'),
+                        r_dict.get('title'), r_dict.get('destination_schools'),
+                        r_dict.get('start_date'), r_dict.get('end_date'),
+                        r_dict.get('days_count') or 1, r_dict.get('nights_count') or 0,
+                        r_dict.get('travel_cost') or 0,
+                        r_dict.get('pocket_rate') or 0, r_dict.get('pocket_total') or 0,
+                        r_dict.get('food_rate') or 0, r_dict.get('food_total') or 0,
+                        r_dict.get('hotel_rate') or 0, r_dict.get('hotel_total') or 0,
+                        r_dict.get('total_cost') or 0
+                    ])
+                    cd_idx += 1
         elif report_type == 'officer_summary':
             ws.append(["ល.រ", "គោត្តនាម និង នាម", "ភេទ", "តួនាទី", "ចំនួនបានចុះ (លើក)", "ចំនួនថវិកា ១ លើក (៛)", "ចំនួនថវិកាសរុប (៛)"])
-            missions = conn.execute('SELECT * FROM mission_orders ORDER BY start_date ASC').fetchall()
+            missions = conn.execute('SELECT * FROM mission_orders WHERE COALESCE(mission_type, "local") != "cross_district" ORDER BY start_date ASC').fetchall()
             summary_list, _, _ = get_officer_summary(missions)
             for idx, o in enumerate(summary_list, 1):
                 ws.append([idx, o['name'], o['sex'], o['position'], o['trip_count'], o['rate_per_trip'], o['total_amount']])
