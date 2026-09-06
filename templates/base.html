@@ -44,10 +44,10 @@
                     <span>២. គ្រប់គ្រងបុគ្គលិក & គ្រូ</span>
                 </a>
                 <div class="sidebar-subnav">
-                    <a href="{{ url_for('staff') }}?sub=school" id="subnav-staff-school" onclick="if(typeof switchStaffTab === 'function'){ switchStaffTab('school'); return false; }" class="subnav-link {% if active_page == 'staff' and (request.args.get('sub') == 'school' or not request.args.get('sub')) %}active-subnav{% endif %}">
+                    <a href="{{ url_for('staff') }}?sub=school" id="subnav-staff-school" onclick="if(typeof switchStaffTab === 'function'){ switchStaffTab('school', true); return false; }" class="subnav-link {% if active_page == 'staff' and (request.args.get('sub') == 'school' or not request.args.get('sub')) %}active-subnav{% endif %}">
                         <i class="fa-solid fa-chalkboard-user"></i> ២.១ គ្រូ & បុគ្គលិកសាលា
                     </a>
-                    <a href="{{ url_for('staff') }}?sub=office" id="subnav-staff-office" onclick="if(typeof switchStaffTab === 'function'){ switchStaffTab('office'); return false; }" class="subnav-link {% if active_page == 'staff' and request.args.get('sub') == 'office' %}active-subnav{% endif %}">
+                    <a href="{{ url_for('staff') }}?sub=office" id="subnav-staff-office" onclick="if(typeof switchStaffTab === 'function'){ switchStaffTab('office', true); return false; }" class="subnav-link {% if active_page == 'staff' and request.args.get('sub') == 'office' %}active-subnav{% endif %}">
                         <i class="fa-solid fa-building-user"></i> ២.២ បុគ្គលិកការិយាល័យ
                     </a>
                 </div>
@@ -100,25 +100,6 @@
             </a>
             {% endif %}
         </nav>
-
-        <div class="sidebar-footer">
-            <div class="user-profile-badge">
-                <div class="user-avatar">
-                    {{ session.get('user_name', 'U')[0] }}
-                </div>
-                <div class="user-info">
-                    <div class="user-name">{{ session.get('user_name', 'អ្នកប្រើប្រាស់') }}</div>
-                    <div class="user-role-tag">
-                        {% if session.get('role') == 'admin' %}អ្នកគ្រប់គ្រងប្រព័ន្ធ
-                        {% elif session.get('role') == 'user' %}អ្នកប្រើប្រាស់
-                        {% else %}ផ្សេងៗ{% endif %}
-                    </div>
-                </div>
-                <a href="{{ url_for('logout') }}" class="btn-logout" title="ចាកចេញ">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </a>
-            </div>
-        </div>
     </aside>
 
     <!-- Main Workspace -->
@@ -128,14 +109,49 @@
             <div class="page-title">
                 <h2>{% block header_title %}ប្រព័ន្ធគ្រប់គ្រងការិយាល័យអប់រំ យុវជន និងកីឡា ស្រុកអង្គរធំ{% endblock %}</h2>
             </div>
-            <div class="top-actions">
+            <div class="top-actions" style="display: flex; align-items: center; gap: 14px;">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" id="globalSearch" placeholder="ស្វែងរកទិន្នន័យ...">
                 </div>
-                <span class="badge badge-gold">
-                    <i class="fa-solid fa-location-dot"></i> ស្រុកអង្គរធំ ខេត្តសៀមរាប
+                <span class="badge badge-gold" style="white-space: nowrap;">
+                    <i class="fa-solid fa-location-dot"></i> ស្រុកអង្គរធំ
                 </span>
+
+                <!-- User Account Profile Dropdown Container (Click to Open Menu) -->
+                <div class="user-dropdown-container" style="position: relative;">
+                    <div class="user-profile-badge" id="userProfileBtn" onclick="toggleUserDropdown(event)" 
+                         style="padding: 4px 14px 4px 6px; background: rgba(15, 43, 92, 0.85); border: 1px solid var(--accent-gold); border-radius: 30px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); cursor: pointer; user-select: none; transition: all 0.2s;">
+                        <!-- Circular Profile Photo Avatar Container -->
+                        <div class="user-avatar-circle" style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-gold), #c98e29); border: 2px solid var(--accent-gold); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; box-shadow: 0 2px 8px rgba(229, 169, 59, 0.4);">
+                            {% if session.get('profile_pic') %}
+                            <img src="{{ session.get('profile_pic') }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            <span style="font-size: 14px; font-weight: 700; color: #0b132b;">{{ session.get('user_name', 'U')[0] }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- User Name & Dropdown Caret Icon -->
+                        <div class="user-name" style="font-size: 13px; font-weight: 700; color: #ffffff; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+                            {{ session.get('user_name', 'អ្នកប្រើប្រាស់') }}
+                            <i class="fa-solid fa-chevron-down" style="font-size: 11px; color: var(--accent-gold); transition: transform 0.2s;" id="userCaret"></i>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Popup Menu (Compact & Sleek) -->
+                    <div class="user-dropdown-menu" id="userDropdownMenu" 
+                         style="display: none; position: absolute; right: 0; top: 50px; width: 155px; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(14px); border: 1px solid var(--accent-gold); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.6); z-index: 1000; overflow: hidden; padding: 4px 0;">
+                        <a href="{{ url_for('profile') }}" class="dropdown-item-link" style="display: flex; align-items: center; gap: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600; color: #e2e8f0; text-decoration: none;">
+                            <i class="fa-solid fa-user-gear" style="color: var(--accent-gold); font-size: 13px;"></i> គណនីរបស់ខ្ញុំ
+                        </a>
+
+                        <div style="border-top: 1px solid var(--border-color); margin: 2px 0;"></div>
+
+                        <a href="{{ url_for('logout') }}" class="dropdown-item-link" style="display: flex; align-items: center; gap: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600; color: #ff6b6b; text-decoration: none;">
+                            <i class="fa-solid fa-right-from-bracket" style="font-size: 13px;"></i> ចាកចេញ
+                        </a>
+                    </div>
+                </div>
             </div>
         </header>
 

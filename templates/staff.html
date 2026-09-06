@@ -15,14 +15,15 @@
             <p style="font-size: 13px; color: var(--text-muted); margin: 0;">គ្រប់គ្រងប្រវត្តិរូបគ្រូបង្រៀន បុគ្គលិកតាមសាលារៀន និងបុគ្គលិកការិយាល័យអប់រំ ស្រុកអង្គរធំ</p>
         </div>
 
+        {% set current_sub = request.args.get('sub', 'all') %}
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button id="tab-btn-all" class="btn btn-secondary active-tab" onclick="switchStaffTab('all')">
+            <button id="tab-btn-all" class="btn {% if current_sub == 'all' %}btn-primary active-tab{% else %}btn-secondary{% endif %}" onclick="switchStaffTab('all', true)">
                 <i class="fa-solid fa-border-all"></i> ទាំងអស់ (All)
             </button>
-            <button id="tab-btn-school" class="btn btn-secondary" onclick="switchStaffTab('school')">
+            <button id="tab-btn-school" class="btn {% if current_sub == 'school' %}btn-primary active-tab{% else %}btn-secondary{% endif %}" onclick="switchStaffTab('school', true)">
                 <i class="fa-solid fa-chalkboard-user"></i> ២.១ គ្រូ & បុគ្គលិកសាលា <span class="badge badge-primary" style="margin-left: 6px;">{{ staff_list|length }}</span>
             </button>
-            <button id="tab-btn-office" class="btn btn-secondary" onclick="switchStaffTab('office')">
+            <button id="tab-btn-office" class="btn {% if current_sub == 'office' %}btn-gold active-tab{% else %}btn-secondary{% endif %}" onclick="switchStaffTab('office', true)">
                 <i class="fa-solid fa-building-user"></i> ២.២ បុគ្គលិកការិយាល័យ <span class="badge badge-gold" style="margin-left: 6px;">{{ office_staff_list|length }}</span>
             </button>
         </div>
@@ -30,7 +31,7 @@
 </div>
 
 <!-- Section 2.1: School Staff & Teachers -->
-<div class="panel" id="section-school-staff">
+<div class="panel" id="section-school-staff" style="{% if current_sub == 'office' %}display: none;{% endif %}">
     <div class="panel-header">
         <div class="panel-title">
             <i class="fa-solid fa-chalkboard-user" style="color: var(--accent-gold);"></i> ២.១ ប្រវត្តិរូបគ្រូបង្រៀន និងបុគ្គលិកអប់រំតាមសាលារៀន (School Staff & Teachers)
@@ -61,7 +62,7 @@
             <tbody>
                 {% for s in staff_list %}
                 <tr>
-                    <td><strong>{{ s.staff_id_num }}</strong></td>
+                    <td><strong>{{ s.staff_id_num or '-' }}</strong></td>
                     <td>
                         <div style="font-weight: 600; color: #fff;">{{ s.name_kh }}</div>
                         <div style="font-size: 11px; color: var(--text-muted);">{{ s.name_en }}</div>
@@ -109,7 +110,7 @@
 </div>
 
 <!-- Section 2.2: District Office Staff -->
-<div class="panel" id="section-office-staff" style="margin-top: 24px;">
+<div class="panel" id="section-office-staff" style="{% if current_sub == 'school' %}display: none;{% endif %} margin-top: 24px;">
     <div class="panel-header">
         <div class="panel-title">
             <i class="fa-solid fa-building-user" style="color: var(--accent-gold);"></i> ២.២ បុគ្គលិកការិយាល័យអប់រំ យុវជន និងកីឡា ស្រុកអង្គរធំ (District Education Office Staff)
@@ -140,7 +141,7 @@
             <tbody>
                 {% for os in office_staff_list %}
                 <tr>
-                    <td><strong>{{ os.staff_id_num }}</strong></td>
+                    <td><strong>{{ os.staff_id_num or '-' }}</strong></td>
                     <td>
                         <div style="font-weight: 600; color: #fff;">{{ os.name_kh }}</div>
                         <div style="font-size: 11px; color: var(--text-muted);">{{ os.name_en }}</div>
@@ -386,7 +387,7 @@
 
 {% block extra_scripts %}
 <script>
-    function switchStaffTab(tab) {
+    function switchStaffTab(tab, shouldScroll = false) {
         const secSchool = document.getElementById('section-school-staff');
         const secOffice = document.getElementById('section-office-staff');
         const btnAll = document.getElementById('tab-btn-all');
@@ -424,6 +425,10 @@
             btnAll.classList.add('btn-primary', 'active-tab');
             btnSchool.classList.add('btn-secondary');
             btnOffice.classList.add('btn-secondary');
+        }
+
+        if (shouldScroll) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
@@ -494,9 +499,12 @@
         const urlParams = new URLSearchParams(window.location.search);
         const sub = urlParams.get('sub');
         if (sub === 'school' || sub === 'office') {
-            switchStaffTab(sub);
+            switchStaffTab(sub, false);
         } else {
-            switchStaffTab('all');
+            switchStaffTab('all', false);
+        }
+        if (sub) {
+            window.scrollTo(0, 0);
         }
     });
 </script>
