@@ -622,7 +622,8 @@
                             <label>១. សោហ៊ុយធ្វើដំណើរ (រៀល)</label>
                             <input type="text" inputmode="numeric" name="travel_cost" id="cd_travel_cost"
                                 class="form-control" value="0"
-                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false, 'travel_cost');"
+                                onblur="handleCurrencyBlur(this); calcDatesAndExpenses(false, 'travel_cost');">
                         </div>
                     </div>
 
@@ -631,13 +632,15 @@
                             <label>២. ប្រាក់ហោប៉ាវ - របប/ថ្ងៃ (រៀល)</label>
                             <input type="text" inputmode="numeric" name="pocket_rate" id="cd_pocket_rate"
                                 class="form-control" value="40,000"
-                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false, 'pocket_rate');"
+                                onblur="handleCurrencyBlur(this); calcDatesAndExpenses(false, 'pocket_rate');">
                         </div>
                         <div class="form-group">
                             <label>ប្រាក់ហោប៉ាវ - សរុប (រៀល)</label>
                             <input type="text" inputmode="numeric" name="pocket_total" id="cd_pocket_total"
                                 class="form-control" value="40,000"
-                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false, 'pocket_total');"
+                                onblur="handleCurrencyBlur(this); calcDatesAndExpenses(false, 'pocket_total');">
                         </div>
                     </div>
 
@@ -646,13 +649,15 @@
                             <label>៣. ប្រាក់ហូបចុក - របប/ថ្ងៃ (រៀល)</label>
                             <input type="text" inputmode="numeric" name="food_rate" id="cd_food_rate"
                                 class="form-control" value="0"
-                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false, 'food_rate');"
+                                onblur="handleCurrencyBlur(this); calcDatesAndExpenses(false, 'food_rate');">
                         </div>
                         <div class="form-group">
                             <label>ប្រាក់ហូបចុក - សរុប (រៀល)</label>
                             <input type="text" inputmode="numeric" name="food_total" id="cd_food_total"
                                 class="form-control" value="0"
-                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false, 'food_total');"
+                                onblur="handleCurrencyBlur(this); calcDatesAndExpenses(false, 'food_total');">
                         </div>
                     </div>
 
@@ -661,13 +666,15 @@
                             <label>៤. ប្រាក់ស្នាក់នៅ - របប/យប់ (រៀល)</label>
                             <input type="text" inputmode="numeric" name="hotel_rate" id="cd_hotel_rate"
                                 class="form-control" value="0"
-                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false, 'hotel_rate');"
+                                onblur="handleCurrencyBlur(this); calcDatesAndExpenses(false, 'hotel_rate');">
                         </div>
                         <div class="form-group">
                             <label>ប្រាក់ស្នាក់នៅ - សរុប (រៀល)</label>
                             <input type="text" inputmode="numeric" name="hotel_total" id="cd_hotel_total"
                                 class="form-control" value="0"
-                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false);">
+                                oninput="formatCurrencyInput(this); calcDatesAndExpenses(false, 'hotel_total');"
+                                onblur="handleCurrencyBlur(this); calcDatesAndExpenses(false, 'hotel_total');">
                         </div>
                     </div>
 
@@ -986,15 +993,15 @@
             document.getElementById('cd_days_count').value = m.days_count || 1;
             document.getElementById('cd_nights_count').value = m.nights_count || 0;
             document.getElementById('cd_officer_names').value = m.officer_names || '';
-            document.getElementById('cd_travel_cost').value = m.travel_cost || 0;
-            document.getElementById('cd_pocket_rate').value = m.pocket_rate || 40000;
-            document.getElementById('cd_pocket_total').value = m.pocket_total || 40000;
-            document.getElementById('cd_food_rate').value = m.food_rate || 0;
-            document.getElementById('cd_food_total').value = m.food_total || 0;
-            document.getElementById('cd_hotel_rate').value = m.hotel_rate || 0;
-            document.getElementById('cd_hotel_total').value = m.hotel_total || 0;
-            document.getElementById('cd_total_cost').value = m.total_cost || 0;
-            calcDatesAndExpenses(false);
+            document.getElementById('cd_travel_cost').value = formatNumberWithCommas(m.travel_cost || 0);
+            document.getElementById('cd_pocket_rate').value = formatNumberWithCommas(m.pocket_rate || 40000);
+            document.getElementById('cd_pocket_total').value = formatNumberWithCommas(m.pocket_total || 40000);
+            document.getElementById('cd_food_rate').value = formatNumberWithCommas(m.food_rate || 0);
+            document.getElementById('cd_food_total').value = formatNumberWithCommas(m.food_total || 0);
+            document.getElementById('cd_hotel_rate').value = formatNumberWithCommas(m.hotel_rate || 0);
+            document.getElementById('cd_hotel_total').value = formatNumberWithCommas(m.hotel_total || 0);
+            document.getElementById('cd_total_cost').value = formatNumberWithCommas(m.total_cost || 0);
+            calcDatesAndExpenses(false, 'pocket_total');
             openModal('addCrossDistrictMissionModal');
             return;
         }
@@ -1035,6 +1042,43 @@
         openModal('addMissionModal');
     }
 
+    function formatNumberWithCommas(val) {
+        if (val === null || val === undefined || val === '') return '0';
+        const clean = String(val).replace(/,/g, '').trim();
+        const num = parseFloat(clean);
+        if (isNaN(num)) return '0';
+        return Math.round(num).toLocaleString('en-US');
+    }
+
+    function parseCleanNumber(val) {
+        if (!val) return 0;
+        const clean = String(val).replace(/,/g, '').trim();
+        const num = parseFloat(clean);
+        return isNaN(num) ? 0 : num;
+    }
+
+    function formatCurrencyInput(input) {
+        if (!input) return;
+        const val = input.value;
+        const digits = val.replace(/\D/g, '');
+        if (!digits) {
+            input.value = '';
+            return;
+        }
+        const formatted = Number(digits).toLocaleString('en-US');
+        const posFromEnd = val.length - input.selectionEnd;
+        input.value = formatted;
+        const newPos = Math.max(0, formatted.length - posFromEnd);
+        input.setSelectionRange(newPos, newPos);
+    }
+
+    function handleCurrencyBlur(input) {
+        if (!input) return;
+        if (!input.value || input.value.trim() === '') {
+            input.value = '0';
+        }
+    }
+
     function openAddCrossDistrictMissionModal() {
         document.getElementById('cdMissionModalTitle').innerHTML = '<i class="fa-solid fa-car-side" style="color: #e67e22;"></i> បង្កើតបេសកកម្មឆ្លងស្រុក';
         document.getElementById('cd_mission_id').value = '';
@@ -1048,19 +1092,19 @@
         document.getElementById('cd_days_count').value = 1;
         document.getElementById('cd_nights_count').value = 0;
         document.getElementById('cd_officer_names').value = '';
-        document.getElementById('cd_travel_cost').value = 0;
-        document.getElementById('cd_pocket_rate').value = 40000;
-        document.getElementById('cd_pocket_total').value = 40000;
-        document.getElementById('cd_food_rate').value = 0;
-        document.getElementById('cd_food_total').value = 0;
-        document.getElementById('cd_hotel_rate').value = 0;
-        document.getElementById('cd_hotel_total').value = 0;
-        document.getElementById('cd_total_cost').value = 40000;
+        document.getElementById('cd_travel_cost').value = '0';
+        document.getElementById('cd_pocket_rate').value = '40,000';
+        document.getElementById('cd_pocket_total').value = '40,000';
+        document.getElementById('cd_food_rate').value = '0';
+        document.getElementById('cd_food_total').value = '0';
+        document.getElementById('cd_hotel_rate').value = '0';
+        document.getElementById('cd_hotel_total').value = '0';
+        document.getElementById('cd_total_cost').value = '40,000';
         calcDatesAndExpenses(false);
         openModal('addCrossDistrictMissionModal');
     }
 
-    function calcDatesAndExpenses(autoDays = true) {
+    function calcDatesAndExpenses(autoDays = true, triggeredField = null) {
         const startVal = document.getElementById('cd_start_date').value;
         const endVal = document.getElementById('cd_end_date').value;
 
@@ -1078,21 +1122,36 @@
         const days = parseInt(document.getElementById('cd_days_count').value) || 1;
         const nights = parseInt(document.getElementById('cd_nights_count').value) || 0;
 
-        const travel = parseFloat(document.getElementById('cd_travel_cost').value) || 0;
-        const pRate = parseFloat(document.getElementById('cd_pocket_rate').value) || 0;
-        const fRate = parseFloat(document.getElementById('cd_food_rate').value) || 0;
-        const hRate = parseFloat(document.getElementById('cd_hotel_rate').value) || 0;
+        const travel = parseCleanNumber(document.getElementById('cd_travel_cost').value);
+        const pRate = parseCleanNumber(document.getElementById('cd_pocket_rate').value);
+        const fRate = parseCleanNumber(document.getElementById('cd_food_rate').value);
+        const hRate = parseCleanNumber(document.getElementById('cd_hotel_rate').value);
 
-        const pTotal = pRate * days;
-        const fTotal = fRate * days;
-        const hTotal = hRate * nights;
+        let pTotal, fTotal, hTotal;
 
-        document.getElementById('cd_pocket_total').value = pTotal;
-        document.getElementById('cd_food_total').value = fTotal;
-        document.getElementById('cd_hotel_total').value = hTotal;
+        if (triggeredField === 'pocket_total') {
+            pTotal = parseCleanNumber(document.getElementById('cd_pocket_total').value);
+        } else {
+            pTotal = pRate * days;
+            document.getElementById('cd_pocket_total').value = formatNumberWithCommas(pTotal);
+        }
+
+        if (triggeredField === 'food_total') {
+            fTotal = parseCleanNumber(document.getElementById('cd_food_total').value);
+        } else {
+            fTotal = fRate * days;
+            document.getElementById('cd_food_total').value = formatNumberWithCommas(fTotal);
+        }
+
+        if (triggeredField === 'hotel_total') {
+            hTotal = parseCleanNumber(document.getElementById('cd_hotel_total').value);
+        } else {
+            hTotal = hRate * nights;
+            document.getElementById('cd_hotel_total').value = formatNumberWithCommas(hTotal);
+        }
 
         const grandTotal = travel + pTotal + fTotal + hTotal;
-        document.getElementById('cd_total_cost').value = grandTotal;
+        document.getElementById('cd_total_cost').value = formatNumberWithCommas(grandTotal);
 
         const words = numberToKhmerWordsJS(grandTotal);
         const wordsElem = document.getElementById('cd_total_words');
